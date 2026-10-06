@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BillFlow | Smart Invoice Maker & Billing App</title>
+    <meta name="description" content="Free, unrestricted mobile & desktop invoicing, GST billing, inventory, and party khata app for manufacturers, wholesalers, and retailers.">
+    <link rel="stylesheet" href="css/style.css?v=2">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#121418">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+</head>
+<body data-theme="dark">
+    <!-- Main Mobile Application Container -->
+    <div class="mobile-viewport-wrapper">
+        <div class="mobile-app-frame" id="app-frame">
+
+            <!-- ==============================================================
+                 GLOBAL TOP APP BAR (Contextual per tab)
+                 ============================================================== -->
+            <header class="app-top-bar" id="app-top-bar">
+                <!-- Home Bar -->
+                <div class="top-bar-content" id="top-bar-home">
+                    <div class="user-profile-badge" id="btn-profile-dropdown">
+                        <div class="avatar-circle">A</div>
+                        <div class="user-name-wrap">
+                            <span class="user-name">Abhay</span>
+                            <svg class="chevron-icon" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                    <div class="top-bar-actions" style="display:flex; align-items:center; gap:6px;">
+                        <button class="icon-btn-ghost" id="btn-quick-theme-toggle" title="Toggle Theme (Dark / Light)">
+                            <span id="quick-theme-icon" style="font-size:16px;">🌙</span>
+                        </button>
+                        <button class="icon-btn-ghost" title="Notifications">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bills Bar -->
+                <div class="top-bar-content" id="top-bar-bills" style="display:none;">
+                    <div class="top-tabs-nav">
+                        <button class="top-tab-btn active" data-bill-tab="sales">Sales</button>
+                        <button class="top-tab-btn" data-bill-tab="purchases">Purchases</button>
+                        <button class="top-tab-btn" data-bill-tab="quotations">Quotations</button>
+                        <button class="top-tab-btn" data-bill-tab="more_bills">More</button>
+                    </div>
+                    <div class="top-bar-actions" style="margin-left:auto; display:flex; align-items:center; gap:6px;">
+                        <button class="top-bar-quick-add-btn" id="btn-create-invoice-top" title="Create Invoice">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                            <span>Create</span>
+                        </button>
+                        <button class="icon-btn-ghost" id="btn-bills-menu" title="Invoice Options & Export">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Combined Products & Parties Bar -->
+                <div class="top-bar-content" id="top-bar-items-parties" style="display:none;">
+                    <div id="top-bar-sub-products" style="display:flex; width:100%; align-items:center; justify-content:space-between;">
+                        <h2 class="screen-title" style="font-size:17px; font-weight:800;">Products & Services</h2>
+                        <div class="top-bar-actions" style="display:flex; align-items:center; gap:6px;">
+                            <button class="top-bar-quick-add-btn" id="btn-add-product-top" title="Add Product">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                <span>Add</span>
+                            </button>
+                            <button class="icon-btn-ghost" id="btn-search-products-top" title="Search Products">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </button>
+                            <button class="icon-btn-ghost" id="btn-products-menu" title="Product Options">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="top-bar-sub-parties" style="display:none; width:100%; align-items:center; justify-content:space-between;">
+                        <div class="top-tabs-nav">
+                            <button class="top-tab-btn active" data-party-tab="customers">Customers</button>
+                            <button class="top-tab-btn" data-party-tab="vendors">Vendors</button>
+                        </div>
+                        <div class="top-bar-actions" style="display:flex; align-items:center; gap:6px;">
+                            <button class="top-bar-quick-add-btn" id="btn-add-party-top" title="New Party">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                <span>New</span>
+                            </button>
+                            <button class="icon-btn-ghost" id="btn-search-parties-top" title="Search Parties">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </button>
+                            <button class="icon-btn-ghost" id="btn-parties-menu" title="Party Options">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- More Bar -->
+                <div class="top-bar-content" id="top-bar-more" style="display:none;">
+                    <div class="user-profile-badge">
+                        <div class="avatar-circle">A</div>
+                        <div class="user-name-wrap">
+                            <span class="user-name">Abhay</span>
+                        </div>
+                    </div>
+                    <div class="top-bar-actions" style="display:flex; align-items:center; gap:6px;">
+                        <button class="icon-btn-ghost" id="btn-quick-theme-toggle-more" title="Toggle Theme (Dark / Light)">
+                            <span class="quick-theme-icon-more" style="font-size:16px;">🌙</span>
+                        </button>
+                        <button class="icon-btn-ghost" title="Notifications">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ==============================================================
+                 SCROLLABLE APP SCREEN CONTENT
+                 ============================================================== -->
+            <main class="app-screen-body">
+
+                <!-- SCREEN 1: HOME (Clean & Simple) -->
+                <section class="tab-screen active" id="screen-home">
+                    <!-- Summary Card (This Year | Sales | Purchases) -->
+                    <div class="home-summary-card">
+                        <div class="summary-card-header">
+                            <div class="dropdown-filter-btn">
+                                <span>This Year</span>
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                            <button class="link-btn-blue" id="btn-home-view-bills">View Bills History</button>
+                        </div>
+                        <div class="summary-kpi-row">
+                            <div class="summary-kpi-col">
+                                <span class="kpi-label">Sales</span>
+                                <span class="kpi-amount" id="home-sales-val">₹0.00</span>
+                            </div>
+                            <div class="summary-kpi-col">
+                                <span class="kpi-label">Purchases</span>
+                                <span class="kpi-amount" id="home-purchases-val">₹0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Quick Actions (Clean 2x4 Grid) -->
+                    <div class="section-group">
+                        <div class="section-header-row">
+                            <h3 class="section-title">Create</h3>
+                        </div>
+
+                        <div class="action-grid-8">
+                            <div class="action-grid-item" id="act-invoice">
+                                <div class="grid-icon-circle blue-tint">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Invoice</span>
+                            </div>
+
+                            <div class="action-grid-item" id="act-purchase">
+                                <div class="grid-icon-circle amber-tint">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Purchase</span>
+                            </div>
+
+                            <div class="action-grid-item" id="act-quotation">
+                                <div class="grid-icon-circle purple-tint">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Quotation</span>
+                            </div>
+
+                            <div class="action-grid-item" id="act-expenses">
+                                <div class="grid-icon-circle cyan-tint">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Expenses</span>
+                            </div>
+
+                            <div class="action-grid-item" id="act-challan">
+                                <div class="grid-icon-circle emerald-tint">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Delivery Challan</span>
+                            </div>
+
+                            <div class="action-grid-item" id="act-credit-note">
+                                <div class="grid-icon-circle dark-tint">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Credit Note</span>
+                            </div>
+
+                            <div class="action-grid-item" id="act-sales-order">
+                                <div class="grid-icon-circle slate-tint">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Sales Order</span>
+                            </div>
+
+                            <div class="action-grid-item" id="act-more-create">
+                                <div class="grid-icon-circle outline-tint">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                </div>
+                                <span class="grid-item-label">More</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Quick Access (2x4 Grid with exact icons) -->
+                    <div class="section-group">
+                        <div class="section-header-row">
+                            <h3 class="section-title">Quick Access</h3>
+                        </div>
+
+                        <div class="action-grid-8">
+                            <div class="action-grid-item" id="qa-eway">
+                                <div class="grid-icon-circle">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                </div>
+                                <span class="grid-item-label">E-way Bill</span>
+                            </div>
+
+                            <div class="action-grid-item" id="qa-einvoice">
+                                <div class="grid-icon-circle">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <span class="grid-item-label">E-Invoice</span>
+                            </div>
+
+                            <div class="action-grid-item" id="qa-timeline">
+                                <div class="grid-icon-circle">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Payments</span>
+                            </div>
+
+                            <div class="action-grid-item" id="qa-reports">
+                                <div class="grid-icon-circle">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Reports</span>
+                            </div>
+
+                            <div class="action-grid-item" id="qa-insights">
+                                <div class="grid-icon-circle">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Insights</span>
+                            </div>
+
+                            <div class="action-grid-item" id="qa-backup">
+                                <div class="grid-icon-circle">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Backup Data</span>
+                            </div>
+
+                            <div class="action-grid-item" id="qa-signature">
+                                <div class="grid-icon-circle blue-tint">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Signature</span>
+                            </div>
+
+                            <div class="action-grid-item" id="qa-settings">
+                                <div class="grid-icon-circle">
+                                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                </div>
+                                <span class="grid-item-label">Settings</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SCREEN 2: BILLS (Exact match to Screenshot 4) -->
+                <section class="tab-screen" id="screen-bills">
+                    <!-- Search & Filter Controls -->
+                    <div class="bills-filter-header">
+                        <div class="search-input-box">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" id="bills-search-input" placeholder="Search..."/>
+                        </div>
+                        <div class="dropdown-filter-btn" id="bills-date-dropdown">
+                            <span>This Year</span>
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+
+                    <!-- KPI Strip: Total Amount & Pending -->
+                    <div class="bills-kpi-bar">
+                        <div class="bills-kpi-left">
+                            <span class="bills-kpi-label">Total Amount ▾</span>
+                            <span class="bills-kpi-val" id="bills-total-amt">₹0.00</span>
+                        </div>
+                        <div class="bills-kpi-right">
+                            <span class="bills-kpi-label">Pending</span>
+                            <span class="bills-kpi-val text-pending" id="bills-pending-amt">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Horizontal Scrollable Pill Tabs -->
+                    <div class="pill-tabs-scroller">
+                        <button class="pill-chip active" data-filter="all">All Transactions</button>
+                        <button class="pill-chip" data-filter="paid">Paid</button>
+                        <button class="pill-chip" data-filter="pending">Pending</button>
+                        <button class="pill-chip" data-filter="cancelled">Cancelled</button>
+                        <button class="pill-chip" data-filter="drafts">Drafts</button>
+                    </div>
+
+                    <!-- Filter & Sort Sub-bar with Excel Export Button & Multi-Select Toggle -->
+                    <div class="sub-sort-bar" style="margin-top:6px; display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; align-items:center; gap:16px;">
+                            <div class="sub-filter-action" id="bills-filter-btn" style="cursor:pointer;">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                                <span id="bills-filter-label">Filter</span>
+                            </div>
+                            <div class="sub-sort-action" id="bills-sort-btn" style="cursor:pointer;">
+                                <span>Sort <strong id="bills-sort-label">Default</strong></span>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button type="button" class="btn-select-bills-toggle" id="btn-bills-select-mode" style="background:rgba(59,130,246,0.12); color:#60a5fa; border:1px solid rgba(59,130,246,0.25); border-radius:6px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px;" title="Select bills to delete or manage">
+                                <span>☑️</span><span id="btn-bills-select-mode-text">Select</span>
+                            </button>
+                            <button type="button" class="btn-export-excel-pill" id="btn-export-bills-excel-quick" title="Download Invoices in Excel">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                <span>Excel Report</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Batch Selection Action Bar (shown when Select is active) -->
+                    <div id="bills-batch-action-bar" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:8px; padding:8px 12px; margin:8px 0 4px 0; align-items:center; justify-content:space-between; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span id="bills-selected-count" style="font-size:12px; font-weight:700; color:#f1f5f9;">0 selected</span>
+                            <button type="button" class="link-btn" id="btn-bills-select-all" style="font-size:11px; color:#38bdf8; background:none; border:none; cursor:pointer; text-decoration:underline;">Select All</button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <button type="button" class="btn btn-sm btn-danger" id="btn-bills-delete-selected" style="padding:4px 10px; font-size:11px; font-weight:700; display:flex; align-items:center; gap:4px; background:#ef4444; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+                                <span>🗑️</span><span>Delete Selected</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" id="btn-bills-cancel-select" style="padding:4px 8px; font-size:11px; border-radius:6px; cursor:pointer;">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Banner Callout -->
+
+
+                    <!-- Invoices List Container -->
+                    <div class="bills-list-cards" id="bills-cards-container">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </section>
+
+                <!-- SCREEN 3: COMBINED PRODUCT & PARTIES SCREEN -->
+                <section class="tab-screen" id="screen-items-parties">
+                    <!-- Segmented Master Switcher: Option 1) Product | Option 2) Parties -->
+                    <div class="master-tab-switch-container" style="padding:10px 14px 6px 14px;">
+                        <div class="master-tab-switch">
+                            <button type="button" class="master-sub-tab-btn active" id="btn-subtab-products" onclick="window.app.switchItemsPartiesSubTab('products')">
+                                <span style="font-size:15px;">📦</span><span>1) Product</span>
+                            </button>
+                            <button type="button" class="master-sub-tab-btn" id="btn-subtab-parties" onclick="window.app.switchItemsPartiesSubTab('parties')">
+                                <span style="font-size:15px;">👥</span><span>2) Parties</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SUBVIEW 1: PRODUCTS -->
+                    <div id="subview-products" style="display:block; padding:0 14px 24px 14px;">
+                        <!-- Inline Search Bar -->
+                        <div class="inline-search-bar" id="products-search-bar" style="display:none; margin-bottom:10px;">
+                            <svg width="16" height="16" fill="none" stroke="#64748b" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" id="products-search-input" placeholder="Search products by name, SKU, HSN, category..."/>
+                        </div>
+
+                        <!-- Filter & Sort Bar -->
+                        <div class="sub-sort-bar" style="margin-top:4px; display:flex; align-items:center; justify-content:space-between;">
+                            <div style="display:flex; align-items:center; gap:16px;">
+                                <div class="sub-sort-action" id="prod-sort-btn" style="cursor:pointer;">
+                                    <span>Sort <strong id="prod-sort-label">Default</strong></span>
+                                </div>
+                                <div class="sub-filter-action" id="prod-filter-btn" style="cursor:pointer;">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                                    <span id="prod-filter-label">Filter</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-export-excel-pill" id="btn-export-products-excel-quick" title="Download Products in Excel">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                <span>Excel (.xlsx)</span>
+                            </button>
+                        </div>
+
+                        <!-- Low Stock Filter Chips -->
+                        <div class="chip-filter-row">
+                            <button type="button" class="chip-filter active" id="chip-filter-all-stock">All Stock Items</button>
+                            <button type="button" class="chip-filter" id="chip-filter-low-stock">⚠️ Low Stock Alerts (<span id="low-stock-count-badge">0</span>)</button>
+                        </div>
+
+                        <!-- Products List Container -->
+                        <div class="products-list-cards" id="products-cards-container">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- SUBVIEW 2: PARTIES -->
+                    <div id="subview-parties" style="display:none; padding:0 14px 24px 14px;">
+                        <!-- Collect / Pay Summary Badges -->
+                        <div class="parties-kpi-row" style="margin-top:6px;">
+                            <div class="party-kpi-pill collect" id="party-kpi-collect-btn" style="cursor:pointer;" title="Filter Collectibles">
+                                <span>You Collect:</span>
+                                <strong id="party-collect-val">₹ 0</strong>
+                            </div>
+                            <div class="party-kpi-pill pay" id="party-kpi-pay-btn" style="cursor:pointer;" title="Filter Payables">
+                                <span>You Pay:</span>
+                                <strong id="party-pay-val">₹ 0</strong>
+                            </div>
+                        </div>
+
+                        <!-- Inline Search Bar -->
+                        <div class="inline-search-bar" id="parties-search-bar" style="display:none; margin-bottom:10px;">
+                            <svg width="16" height="16" fill="none" stroke="#64748b" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" id="parties-search-input" placeholder="Search customer or vendor by name, phone..."/>
+                        </div>
+
+                        <!-- Sort & Filter Sub-bar -->
+                        <div class="sub-sort-bar">
+                            <div class="sub-sort-action" id="party-sort-btn" style="cursor:pointer;">
+                                <span>Sort <strong id="party-sort-label">Default</strong></span>
+                            </div>
+                            <div class="sub-filter-action" id="party-filter-btn" style="cursor:pointer;">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                                <span id="party-filter-label">Filter</span>
+                            </div>
+                        </div>
+
+                        <!-- Parties List Container -->
+                        <div class="parties-list-cards" id="parties-cards-container">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SCREEN 5: MORE -->
+                <section class="tab-screen" id="screen-more">
+
+                    <div class="menu-section-group">
+                        <div class="menu-section-label">Account & Business</div>
+                        <div class="menu-card-list">
+                            <div class="menu-item-row" id="menu-company-details">
+                                <div class="menu-icon-wrap">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                </div>
+                                <span class="menu-item-text">Business Profile</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+                            <div class="menu-item-row" id="menu-digital-sig">
+                                <div class="menu-icon-wrap" style="color:#60a5fa;">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </div>
+                                <span class="menu-item-text">Digital Signature & Stamp</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+
+                            <div class="menu-item-row" id="menu-export-products-excel">
+                                <div class="menu-icon-wrap" style="color:#10b981;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                </div>
+                                <span class="menu-item-text">Export Products (Excel)</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+                            <div class="menu-item-row" id="menu-export-invoices-excel">
+                                <div class="menu-icon-wrap" style="color:#38bdf8;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                </div>
+                                <span class="menu-item-text">Export Invoices (Excel)</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+                            <div class="menu-item-row" id="menu-edit-terms">
+                                <div class="menu-icon-wrap" style="color:#f59e0b;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </div>
+                                <span class="menu-item-text">Edit Terms & Conditions</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+                            <div class="menu-item-row" id="menu-edit-footer">
+                                <div class="menu-icon-wrap" style="color:#8b5cf6;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="16" x2="21" y2="16"></line><line x1="7" y1="19" x2="17" y2="19"></line></svg>
+                                </div>
+                                <span class="menu-item-text">Edit Invoice Footer</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+                            <div class="menu-item-row" id="menu-backup">
+                                <div class="menu-icon-wrap">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                </div>
+                                <span class="menu-item-text">Backup Database (Export JSON)</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+                            <div class="menu-item-row" id="menu-restore">
+                                <div class="menu-icon-wrap" style="color:#22c55e;">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                </div>
+                                <span class="menu-item-text">Import Data (Restore Backup)</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Section Group -->
+                    <div class="menu-section-group">
+                        <div class="menu-section-label">Settings</div>
+                        <div class="menu-card-list">
+                            <div class="menu-item-row" id="menu-doc-settings">
+                                <div class="menu-icon-wrap">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <span class="menu-item-text">Document Settings</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+                            <div class="menu-item-row" id="menu-preferences">
+                                <div class="menu-icon-wrap">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+                                </div>
+                                <span class="menu-item-text">Preferences</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+                            <div class="menu-item-row" id="menu-templates">
+                                <div class="menu-icon-wrap">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                </div>
+                                <span class="menu-item-text">Invoice Templates</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+
+                            <div class="menu-item-row" id="menu-theme">
+                                <div class="menu-icon-wrap">
+                                    <span id="menu-theme-icon" style="font-size:16px;">🌓</span>
+                                </div>
+                                <span class="menu-item-text" id="menu-theme-text">App Theme (Dark / Light)</span>
+                                <span id="menu-theme-badge" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; background:rgba(16,185,129,0.15); color:#10b981; margin-left:auto; margin-right:4px;">Dark</span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+
+                            <div class="menu-item-row">
+                                <div class="menu-icon-wrap">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                </div>
+                                <span class="menu-item-text">App Lock <span class="badge-beta">BETA</span></span>
+                                <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- ==============================================================
+                 FLOATING ACTION BUTTONS (Contextual)
+                 ============================================================== -->
+            <!-- Circular + FAB on Bills & Products & Home -->
+            <button class="app-fab-circle" id="global-fab-btn" title="Create New">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+            </button>
+
+            <!-- Wide Pill FAB on Parties Screen -->
+            <button class="app-fab-pill" id="parties-fab-btn" style="display:none;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                <span id="parties-fab-text">+ NEW CUSTOMER</span>
+            </button>
+
+            <!-- ==============================================================
+                 BOTTOM NAVIGATION BAR (4 Core Tabs: Home, Bills History, Product & Parties, More)
+                 ============================================================== -->
+            <nav class="app-bottom-nav">
+                <button class="nav-tab-item active" data-screen="screen-home" id="tab-home">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span>Home</span>
+                </button>
+
+                <button class="nav-tab-item" data-screen="screen-bills" id="tab-bills">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Bills History</span>
+                </button>
+
+                <button class="nav-tab-item" data-screen="screen-items-parties" id="tab-items-parties">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span>Product & Parties</span>
+                </button>
+
+                <button class="nav-tab-item" data-screen="screen-more" id="tab-more">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <span>More</span>
+                </button>
+            </nav>
+
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 1: BOTTOM-SHEET / FULL INVOICE CREATOR
+         ============================================================== -->
+    <div class="modal-overlay" id="voucher-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <h3 id="voucher-modal-title">Create Sales Invoice</h3>
+                <button class="btn-icon modal-close-btn" data-close="voucher-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="voucher-form">
+                    <input type="hidden" id="vform-id"/>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Voucher Type</label>
+                            <select class="form-control" id="vform-type">
+                                <option value="sales_invoice">Tax Invoice (Sales)</option>
+                                <option value="purchase_invoice">Purchase Invoice (Inward)</option>
+                                <option value="estimate">Quotation / Estimate</option>
+                                <option value="delivery_challan">Delivery Challan</option>
+                                <option value="credit_note">Credit Note (Sales Return)</option>
+                                <option value="debit_note">Debit Note (Purchase Return)</option>
+                                <option value="expense">Expense Voucher</option>
+                                <option value="sales_order">Sales Order</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Invoice / Doc Number *</label>
+                            <input type="text" class="form-control" id="vform-no" required/>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Invoice Date *</label>
+                            <input type="date" class="form-control" id="vform-date" required/>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Due Date</label>
+                            <input type="date" class="form-control" id="vform-due-date"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label style="margin:0;" id="vform-party-label">Select Customer / Buyer *</label>
+                            <button type="button" class="link-btn-blue" id="btn-voucher-quick-add-party" style="font-size:11px; font-weight:700; background:none; border:none; color:#3b82f6; cursor:pointer;">+ New Party</button>
+                        </div>
+                        <select class="form-control" id="vform-party-select" required>
+                            <option value="">-- Choose Party --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Place of Supply (State) *</label>
+                            <input type="text" class="form-control" id="vform-place-of-supply" placeholder="e.g. State or Place of Supply" required/>
+                        </div>
+                        <div class="form-group">
+                            <label>Dispatch Godown</label>
+                            <select class="form-control" id="vform-godown-select"></select>
+                        </div>
+                    </div>
+
+                    <!-- Editable Delivery Address -->
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label style="margin:0;">Delivery / Consignee Address</label>
+                            <span style="font-size:11px; color:var(--text-sub, #64748b);">Editable for this invoice</span>
+                        </div>
+                        <textarea class="form-control" id="vform-delivery-address" rows="2" placeholder="Destination / delivery site address (defaults to customer's delivery address)"></textarea>
+                    </div>
+
+                    <!-- Transporter Freight Checkbox & Details -->
+                    <div class="form-group" style="margin-bottom:14px; padding:10px 12px; background:var(--bg-card-sub, #f8fafc); border-radius:8px; border:1px solid var(--border-color, #e2e8f0);">
+                        <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; font-size:13px; color:var(--text-primary, #1e293b); user-select:none; margin:0;">
+                            <input type="checkbox" id="vform-has-transporter" style="width:16px; height:16px; cursor:pointer; accent-color:var(--primary, #2563eb);"/>
+                            <span>🚚 Delivery being carried out by Transporter (Add Freight)</span>
+                        </label>
+
+                        <div id="vform-transporter-section" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border-color, #cbd5e1);">
+                            <div class="form-grid-2">
+                                <div class="form-group" style="margin-bottom:8px;">
+                                    <label style="font-size:12px;">Transporter Name</label>
+                                    <input type="text" class="form-control" id="vform-transporter-name" placeholder="e.g. VRL Logistics / Delhivery"/>
+                                </div>
+                                <div class="form-group" style="margin-bottom:8px;">
+                                    <label style="font-size:12px;">Vehicle No / LR No</label>
+                                    <input type="text" class="form-control" id="vform-transporter-lr" placeholder="e.g. MH-04-AZ-9988 / LR-1024"/>
+                                </div>
+                            </div>
+                            <div class="form-grid-2">
+                                <div class="form-group" style="margin-bottom:4px;">
+                                    <label style="font-size:12px;">Transporter Cost (₹) *</label>
+                                    <input type="number" class="form-control" id="vform-transporter-cost" placeholder="0.00" step="0.01" min="0"/>
+                                </div>
+                                <div class="form-group" style="margin-bottom:4px;">
+                                    <label style="font-size:12px;">GST on Transporter Cost</label>
+                                    <select class="form-control" id="vform-transporter-gst">
+                                        <option value="0">Without GST (0%)</option>
+                                        <option value="5">With GST @ 5% (GTA)</option>
+                                        <option value="12">With GST @ 12%</option>
+                                        <option value="18" selected>With GST @ 18%</option>
+                                        <option value="28">With GST @ 28%</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="font-size:11px; color:var(--text-sub, #64748b); margin-top:4px;" id="vform-transporter-tax-hint">
+                                Transporter cost will be added to the invoice total.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Line Items Header -->
+                    <div class="modal-subheading-row">
+                        <h4>Products & Items</h4>
+                        <div style="display:flex; gap:6px;">
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-scan-barcode-voucher" style="display:inline-flex; align-items:center; gap:4px; font-weight:700;">
+                                <span>📷</span><span>Scan Barcode</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-item-row">+ Add Item Row</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="item-row-builder-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 32%">Item Description</th>
+                                    <th style="width: 10%">HSN</th>
+                                    <th style="width: 10%">Qty</th>
+                                    <th style="width: 14%">Rate (₹)</th>
+                                    <th style="width: 10%">Disc %</th>
+                                    <th style="width: 10%">GST %</th>
+                                    <th style="width: 14%; text-align:right;">Total (₹)</th>
+                                    <th style="width: 4%"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="vform-items-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Totals Calculation Block -->
+                    <div class="voucher-totals-summary-box">
+                        <div class="tot-row">
+                            <span>Subtotal (Taxable):</span>
+                            <strong id="vcalc-subtotal">₹ 0.00</strong>
+                        </div>
+                        <div class="tot-row" id="vcalc-transporter-row" style="display:none; color:var(--primary, #2563eb);">
+                            <span id="vcalc-transporter-label">Freight / Transporter:</span>
+                            <strong id="vcalc-transporter-cost">₹ 0.00</strong>
+                        </div>
+                        <div class="tot-row" id="vcalc-cgst-sgst-row">
+                            <span>CGST + SGST:</span>
+                            <strong id="vcalc-cgst-sgst">₹ 0.00</strong>
+                        </div>
+                        <div class="tot-row" id="vcalc-igst-row" style="display:none;">
+                            <span>IGST:</span>
+                            <strong id="vcalc-igst">₹ 0.00</strong>
+                        </div>
+                        <div class="tot-row">
+                            <span>Round Off:</span>
+                            <span id="vcalc-roundoff">₹ 0.00</span>
+                        </div>
+                        <div class="tot-row grand-total-highlight">
+                            <span>Grand Total:</span>
+                            <span id="vcalc-grand-total">₹ 0.00</span>
+                        </div>
+                        <div class="tot-row" style="margin-top:10px;">
+                            <label style="font-weight:700;">Paid Amount (₹):</label>
+                            <input type="number" class="form-control" id="vform-paid-amount" style="width:130px; text-align:right;" step="0.01" value="0.00"/>
+                        </div>
+                        <div class="tot-row" style="margin-top:6px; font-weight:700;">
+                            <span>Balance Due:</span>
+                            <span id="vcalc-balance-due" class="text-pending">₹ 0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Terms & Conditions and Footer Text Section (Editable for this invoice) -->
+                    <div style="background:var(--card-bg, #1e2430); border:1px solid var(--border-color, #28303f); border-radius:10px; padding:14px; margin-top:14px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <h4 style="margin:0; font-size:13px; font-weight:700; color:var(--text, #f1f5f9); display:flex; align-items:center; gap:6px;">
+                                <span>📝</span> Terms, Conditions & Footer
+                            </h4>
+                            <span style="font-size:11px; color:var(--text-sub, #94a3b8);">Editable for this invoice</span>
+                        </div>
+
+                        <!-- Terms & Conditions Field -->
+                        <div class="form-group" style="margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <label style="font-size:12px; font-weight:600; color:var(--text, #f1f5f9); margin:0;">Terms & Conditions</label>
+                                <div style="display:flex; gap:4px;">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btn-vform-terms-standard" style="padding:2px 6px; font-size:10px;">Standard</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btn-vform-terms-service" style="padding:2px 6px; font-size:10px;">Services</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btn-vform-terms-clear" style="padding:2px 6px; font-size:10px;">Clear</button>
+                                </div>
+                            </div>
+                            <textarea class="form-control" id="vform-terms" rows="2" style="font-size:11.5px; line-height:1.4; resize:vertical;" placeholder="1. Goods once sold will not be taken back..."></textarea>
+                        </div>
+
+                        <!-- Footer Text Field -->
+                        <div class="form-group" style="margin-bottom:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <label style="font-size:12px; font-weight:600; color:var(--text, #f1f5f9); margin:0;">Invoice Footer Text</label>
+                                <div style="display:flex; gap:4px;">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btn-vform-footer-thanks" style="padding:2px 6px; font-size:10px;">Thanks</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btn-vform-footer-jurisdiction" style="padding:2px 6px; font-size:10px;">Jurisdiction</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btn-vform-footer-clear" style="padding:2px 6px; font-size:10px;">Clear</button>
+                                </div>
+                            </div>
+                            <input type="text" class="form-control" id="vform-footer" style="font-size:11.5px;" placeholder="e.g. Thank you for your business! (Leave empty for no footer text)" />
+                            <div style="font-size:10.5px; color:var(--text-sub, #64748b); margin-top:3px;">
+                                Custom note at bottom of invoice. Leave empty if you don't want footer text.
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                <button type="button" class="btn btn-danger" id="btn-vform-delete-voucher" style="display:none; background:#ef4444; color:#fff; font-weight:700; font-size:12px; padding:8px 14px;">🗑️ Delete</button>
+                <div style="display:flex; gap:8px; margin-left:auto;">
+                    <button type="button" class="btn btn-secondary modal-close-btn" data-close="voucher-modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="btn-save-and-print">Save & Preview / Print</button>
+                    <button type="button" class="btn btn-primary" id="btn-save-voucher-only">Save Invoice</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 2: ADD / EDIT PRODUCT
+         ============================================================== -->
+    <div class="modal-overlay" id="item-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <h3 id="item-modal-title">Add Product</h3>
+                <button class="btn-icon modal-close-btn" data-close="item-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="item-form">
+                    <input type="hidden" id="iform-id"/>
+                    <div class="form-group">
+                        <label>Product Name *</label>
+                        <input type="text" class="form-control" id="iform-name" placeholder="e.g. Industrial Ball Valve 2 Inch" required/>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Item SKU / Code</label>
+                            <input type="text" class="form-control" id="iform-sku" placeholder="SKU-1001"/>
+                        </div>
+                        <div class="form-group">
+                            <label>HSN / SAC Code *</label>
+                            <input type="text" class="form-control" id="iform-hsn" placeholder="8481" required/>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <input type="text" class="form-control" id="iform-category" placeholder="Hardware"/>
+                        </div>
+                        <div class="form-group">
+                            <label>GST Tax Rate (%)</label>
+                            <select class="form-control" id="iform-tax-rate">
+                                <option value="0">0%</option>
+                                <option value="5">5%</option>
+                                <option value="12">12%</option>
+                                <option value="18" selected>18%</option>
+                                <option value="28">28%</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label>Unit *</label>
+                            <select class="form-control" id="iform-unit">
+                                <option value="Pcs">Pcs</option>
+                                <option value="Box">Box</option>
+                                <option value="Kg">Kg</option>
+                                <option value="Ton">Ton</option>
+                                <option value="Length">Length</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Wholesale (₹) *</label>
+                            <input type="number" step="0.01" class="form-control" id="iform-wholesale-price" value="0.00" required/>
+                        </div>
+                        <div class="form-group">
+                            <label>Retail MRP (₹)</label>
+                            <input type="number" step="0.01" class="form-control" id="iform-retail-price" value="0.00"/>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Current Stock Qty</label>
+                            <input type="number" step="1" class="form-control" id="iform-opening-stock" value="0"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Warehouse / Godown</label>
+                            <select class="form-control" id="iform-godown"></select>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>Barcode / SKU</span>
+                                <button type="button" class="link-btn-blue" id="btn-scan-barcode-item" style="font-size:11px; font-weight:700; background:none; border:none; color:#3b82f6; cursor:pointer;">📷 Scan</button>
+                            </label>
+                            <input type="text" class="form-control" id="iform-barcode" placeholder="Scan or type barcode / SKU"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Low Stock Alert Level (Min Qty)</label>
+                            <input type="number" step="1" class="form-control" id="iform-min-stock" value="5" placeholder="5"/>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display:flex; align-items:center; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn btn-secondary" id="btn-delete-item" style="display:none; margin-right:auto; background:#dc2626; color:#fff; border-color:#dc2626;">Delete</button>
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="item-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save-item" form="item-form">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 3: ADD / EDIT PARTY
+         ============================================================== -->
+    <div class="modal-overlay" id="party-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <h3 id="party-modal-title">Add New Customer</h3>
+                <button class="btn-icon modal-close-btn" data-close="party-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="party-form">
+                    <input type="hidden" id="pform-id"/>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Party Type</label>
+                            <select class="form-control" id="pform-type">
+                                <option value="customer">Customer (Buyer)</option>
+                                <option value="supplier">Vendor (Supplier)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Party Name *</label>
+                            <input type="text" class="form-control" id="pform-name" placeholder="Business or Person Name" required/>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Phone Number *</label>
+                            <input type="text" class="form-control" id="pform-phone" placeholder="+91 98XXX XXXXX" required/>
+                        </div>
+                        <div class="form-group">
+                            <label>GSTIN (Optional)</label>
+                            <input type="text" class="form-control" id="pform-gstin" placeholder="15-digit GSTIN"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Billing Address</label>
+                        <textarea class="form-control" id="pform-billing-address" rows="2" placeholder="Street, Building, Area, City, State, PIN"></textarea>
+                        <input type="hidden" id="pform-address"/>
+                    </div>
+                    <div class="form-group" style="margin-top: -6px; margin-bottom: 8px;">
+                        <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-weight:500; font-size:13px; color:var(--text-primary, #1e293b); user-select:none;">
+                            <input type="checkbox" id="pform-same-address" checked style="width:16px; height:16px; cursor:pointer; accent-color:var(--primary, #2563eb);"/>
+                            <span>Delivery address is same as billing address</span>
+                        </label>
+                    </div>
+                    <div class="form-group" id="pform-delivery-group">
+                        <label>Delivery Address</label>
+                        <textarea class="form-control" id="pform-delivery-address" rows="2" placeholder="Delivery / Shipping destination address"></textarea>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>State / Region (Optional)</label>
+                            <input type="text" class="form-control" id="pform-state" placeholder="e.g. Uttar Pradesh, Delhi, Gujarat..."/>
+                        </div>
+                        <div class="form-group">
+                            <label>City / Location (Optional)</label>
+                            <input type="text" class="form-control" id="pform-city" placeholder="e.g. Noida, Kanpur, Mumbai..."/>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display:flex; align-items:center; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn btn-secondary" id="btn-party-view-ledger" style="display:none; margin-right:auto;">📋 View Khata / Ledger</button>
+                <button type="button" class="btn btn-secondary" id="btn-delete-party" style="display:none; background:#dc2626; color:#fff; border-color:#dc2626;">Delete</button>
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="party-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save-party" form="party-form">Save Party</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 4: INVOICE PRINT & LIVE PREVIEW MODAL
+         ============================================================== -->
+    <div class="modal-overlay" id="print-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 16px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:18px;">🖨️</span>
+                        <h3 style="margin:0; font-size:15px; font-weight:700;">Invoice Print & Preview</h3>
+                    </div>
+                    <button class="btn-icon modal-close-btn" data-close="print-modal">&times;</button>
+                </div>
+                <!-- Interactive Controls Ribbon (Template, Font, Font Scale) -->
+                <div class="print-controls-ribbon" style="display:flex; flex-wrap:wrap; gap:8px; width:100%; padding-top:6px; border-top:1px solid #282e3b;">
+                    <div style="flex: 1.4; min-width: 140px;">
+                        <label style="font-size:10px; color:#94a3b8; font-weight:700; text-transform:uppercase; display:block; margin-bottom:2px;">Template</label>
+                        <select class="form-control" id="print-template-selector" style="height:32px; font-size:11px; padding:4px 8px;">
+                            <option value="dot_matrix_international" selected>International B&W (Dot Matrix)</option>
+                            <option value="classic_industrial">Classic Factory B2B (A4)</option>
+                            <option value="modern_gst">Modern GST (Color A4)</option>
+                            <option value="minimal_clean">Clean Minimalist (A4)</option>
+                            <option value="thermal_80mm">Thermal POS (80mm)</option>
+                            <option value="thermal_58mm">Thermal POS (58mm)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1.2; min-width: 130px;">
+                        <label style="font-size:10px; color:#94a3b8; font-weight:700; text-transform:uppercase; display:block; margin-bottom:2px;">Invoice Copy</label>
+                        <select class="form-control" id="print-copy-selector" style="height:32px; font-size:11px; padding:4px 8px; font-weight:700;">
+                            <option value="ORIGINAL FOR RECIPIENT" selected>Original for Recipient</option>
+                            <option value="DUPLICATE FOR TRANSPORTER">Duplicate for Transporter</option>
+                            <option value="TRIPLICATE FOR SUPPLIER">Triplicate for Supplier</option>
+                            <option value="OFFICE COPY">Office Copy</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1.1; min-width: 110px;">
+                        <label style="font-size:10px; color:#94a3b8; font-weight:700; text-transform:uppercase; display:block; margin-bottom:2px;">Font Family</label>
+                        <select class="form-control" id="print-font-selector" style="height:32px; font-size:11px; padding:4px 8px;">
+                            <option value="font-arial" selected>Arial</option>
+                            <option value="font-times">Times New Roman</option>
+                            <option value="font-aptos">Aptos</option>
+                            <option value="font-courier">Courier New (Dot Matrix)</option>
+                            <option value="font-calibri">Calibri</option>
+                            <option value="font-consolas">Consolas</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 100px;">
+                        <label style="font-size:10px; color:#94a3b8; font-weight:700; text-transform:uppercase; display:block; margin-bottom:2px;">Font Scale</label>
+                        <select class="form-control" id="print-font-size-selector" style="height:32px; font-size:11px; padding:4px 8px;">
+                            <option value="font-scale-compact">Compact (9pt)</option>
+                            <option value="font-scale-standard" selected>Standard (10pt)</option>
+                            <option value="font-scale-comfortable">Comfortable (11pt)</option>
+                            <option value="font-scale-large">Large (12pt)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body" style="padding:0; background:#0f172a; position:relative; overflow:hidden;">
+                <div class="invoice-preview-container" id="invoice-preview-host"></div>
+                <div id="preview-zoom-badge" class="preview-zoom-badge" style="display:none;" title="Tap to reset zoom">
+                    <span id="preview-zoom-text">Pinch to zoom 🔍</span>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding:10px 14px; background:#1e2430; border-top:1px solid #28303f; display:flex; flex-direction:column; gap:8px;">
+                <!-- Main Action Row: Send PDF, Save PDF, Print -->
+                <div style="display:flex; gap:8px; width:100%;">
+                    <button type="button" class="btn btn-success" id="btn-print-whatsapp" style="flex:1.2; justify-content:center; padding:10px 8px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:6px;">
+                        <span>📤</span><span>Send PDF</span>
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btn-download-pdf" style="flex:1.2; justify-content:center; padding:10px 8px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:6px;">
+                        <span>📥</span><span>Save PDF</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="btn-print-trigger" style="flex:0.8; justify-content:center; padding:10px 6px; font-size:13px;" title="Print on Printer">
+                        <span>🖨️</span><span>Print</span>
+                    </button>
+                </div>
+                <!-- Secondary Row: Sign, Edit Terms, Modify Invoice, Delete, Close -->
+                <div style="display:flex; gap:8px; width:100%; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-sm btn-info" id="btn-open-sig-modal" style="background:#2563eb; color:#fff; font-size:11px; padding:6px 10px;">✍️ Sign</button>
+                        <button type="button" class="btn btn-sm btn-warning" id="btn-print-edit-terms" style="background:#d97706; color:#fff; font-size:11px; padding:6px 10px;">📝 Terms</button>
+                        <button type="button" class="btn btn-sm" id="btn-print-edit-footer" style="background:#8b5cf6; color:#fff; font-size:11px; padding:6px 10px; font-weight:600;">📄 Edit Footer</button>
+                        <button type="button" class="btn btn-sm" id="btn-print-modify-invoice" style="background:#0284c7; color:#fff; font-size:11px; padding:6px 10px; font-weight:700;">✏️ Modify</button>
+                        <button type="button" class="btn btn-sm" id="btn-print-pay-status" style="background:#16a34a; color:#fff; font-size:11px; padding:6px 10px; font-weight:700;">💳 Status</button>
+                        <button type="button" class="btn btn-sm btn-danger" id="btn-print-delete-invoice" style="background:#ef4444; color:#fff; font-size:11px; padding:6px 10px; font-weight:700;">🗑️ Delete</button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary modal-close-btn" data-close="print-modal" style="font-size:11px; padding:6px 12px;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 5: COMPANY PROFILE & BANK SETTINGS
+         ============================================================== -->
+    <div class="modal-overlay" id="company-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <h3>Company Profile</h3>
+                <button class="btn-icon modal-close-btn" data-close="company-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="company-profile-form">
+                    <!-- Company Logo Upload -->
+                    <div class="form-group company-logo-upload-group" style="margin-bottom: 16px;">
+                        <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <span style="font-weight:600;">Company Logo (Invoice Header)</span>
+                            <span style="font-size:11px; color:#94a3b8; font-weight:normal;">PNG, JPG, SVG, WebP</span>
+                        </label>
+                        <div class="logo-uploader-card" style="display:flex; align-items:center; gap:14px; padding:12px; border:1px dashed #475569; border-radius:10px; background:rgba(255,255,255,0.03);">
+                            <div id="company-logo-preview-box" style="width:72px; height:72px; border-radius:8px; border:1px solid #334155; background:#0f172a; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; flex-shrink:0;">
+                                <img id="company-logo-img-preview" src="" alt="Logo Preview" style="max-width:100%; max-height:100%; object-fit:contain; display:none;" />
+                                <span id="company-logo-placeholder-icon" style="font-size:24px; color:#64748b;">🏢</span>
+                            </div>
+                            <div style="flex:1;">
+                                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
+                                    <label class="btn btn-secondary btn-sm" style="cursor:pointer; margin:0; display:inline-flex; align-items:center; gap:6px;">
+                                        <span>📷 Upload Logo</span>
+                                        <input type="file" id="set-company-logo-file" accept="image/*" style="display:none;" />
+                                    </label>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" id="btn-remove-company-logo" style="display:none;">Remove</button>
+                                </div>
+                                <div style="font-size:11px; color:#94a3b8; line-height:1.3;">Affixed on the right side of the invoice header. High resolution with clear print quality.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Business / Company Name *</label>
+                        <input type="text" class="form-control" id="set-business-name" required/>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>GSTIN *</label>
+                            <input type="text" class="form-control" id="set-gstin" required/>
+                        </div>
+                        <div class="form-group">
+                            <label>State *</label>
+                            <input type="text" class="form-control" id="set-state" value="Maharashtra" required/>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="text" class="form-control" id="set-phone"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" class="form-control" id="set-email"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Factory / Shop Address</label>
+                        <textarea class="form-control" id="set-address" rows="2"></textarea>
+                    </div>
+
+                    <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+                        <button type="submit" class="btn btn-primary" id="btn-save-company">Save Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 6: DIGITAL SIGNATURE PAD (Touch & Stylus & Type)
+         ============================================================== -->
+    <div class="modal-overlay" id="signature-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <h3>✍️ Digital Signature</h3>
+                <button class="btn-icon modal-close-btn" data-close="signature-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:16px;">
+                <!-- Mode Tabs -->
+                <div class="sig-mode-tabs" style="display:flex; gap:8px; margin-bottom:12px;">
+                    <button type="button" class="btn btn-sm btn-primary sig-tab-btn active" data-sig-mode="draw" id="tab-sig-draw">✍️ Draw</button>
+                    <button type="button" class="btn btn-sm btn-secondary sig-tab-btn" data-sig-mode="type" id="tab-sig-type">⌨️ Type Name</button>
+                    <button type="button" class="btn btn-sm btn-secondary sig-tab-btn" data-sig-mode="upload" id="tab-sig-upload">📁 Upload</button>
+                </div>
+
+                <!-- Mode 1: Draw Pad -->
+                <div id="sig-mode-draw-container">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:11px; color:var(--text-sub);">Sign with finger or stylus:</span>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <span style="font-size:10px; color:var(--text-sub);">Ink:</span>
+                            <button type="button" class="sig-color-dot active" data-color="#1e3a8a" style="width:20px; height:20px; border-radius:50%; background:#1e3a8a; border:2px solid #fff; cursor:pointer;" title="Navy Ink"></button>
+                            <button type="button" class="sig-color-dot" data-color="#0f172a" style="width:20px; height:20px; border-radius:50%; background:#0f172a; border:1px solid #475569; cursor:pointer;" title="Black Ink"></button>
+                            <button type="button" class="sig-color-dot" data-color="#2563eb" style="width:20px; height:20px; border-radius:50%; background:#2563eb; border:1px solid #475569; cursor:pointer;" title="Blue Ink"></button>
+                        </div>
+                    </div>
+                    <div class="sig-canvas-wrapper" style="border:2px dashed #3b82f6; border-radius:8px; background:#ffffff; overflow:hidden; position:relative; box-shadow:inset 0 2px 6px rgba(0,0,0,0.06);">
+                        <canvas id="signature-canvas" style="display:block; width:100%; height:180px; touch-action:none;"></canvas>
+                        <div style="position:absolute; bottom:30px; left:20px; right:20px; border-bottom:1px solid #e2e8f0; pointer-events:none;"></div>
+                        <div style="position:absolute; bottom:10px; right:16px; font-size:9.5px; font-weight:600; color:#94a3b8; pointer-events:none;">Authorized Signatory</div>
+                    </div>
+                </div>
+
+                <!-- Mode 2: Type Signature -->
+                <div id="sig-mode-type-container" style="display:none;">
+                    <div class="form-group">
+                        <label>Signatory Name</label>
+                        <input type="text" class="form-control" id="sig-type-input" placeholder="Type your full name (e.g. Abhay Sharma)" />
+                    </div>
+                    <div style="font-size:11px; color:var(--text-sub); margin-bottom:8px;">Live Cursive Preview:</div>
+                    <div id="sig-cursive-preview" style="background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; padding:24px; text-align:center; font-family:'Brush Script MT', 'Dancing Script', 'Caveat', cursive; font-size:32px; color:#1e3a8a; min-height:90px; display:flex; align-items:center; justify-content:center;">
+                        (Type name above)
+                    </div>
+                </div>
+
+                <!-- Mode 3: Upload Signature File -->
+                <div id="sig-mode-upload-container" style="display:none;">
+                    <div class="form-group">
+                        <label>Upload Signature Image (PNG or JPG)</label>
+                        <input type="file" class="form-control" id="sig-upload-input" accept="image/*" />
+                    </div>
+                    <div style="font-size:11px; color:var(--text-sub); margin-top:6px;">Upload a scanned or photographed signature. PNG with transparent background looks best.</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between;">
+                <button type="button" class="btn btn-secondary" id="btn-clear-sig">Clear</button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-secondary modal-close-btn" data-close="signature-modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btn-save-sig">Apply Signature</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 7: MORE CREATE ACTIONS SHEET
+         ============================================================== -->
+    <div class="modal-overlay" id="more-create-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <h3>Create New Document</h3>
+                <button class="btn-icon modal-close-btn" data-close="more-create-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="action-sheet-grid">
+                    <div class="action-sheet-card" onclick="window.app.openVoucherModal('sales_invoice'); document.getElementById('more-create-modal').classList.remove('active');">
+                        <div class="grid-icon-circle blue-tint">📄</div>
+                        <div>
+                            <h4>Tax Invoice</h4>
+                            <p>GST Sales Bill</p>
+                        </div>
+                    </div>
+                    <div class="action-sheet-card" onclick="window.app.openVoucherModal('purchase_invoice'); document.getElementById('more-create-modal').classList.remove('active');">
+                        <div class="grid-icon-circle amber-tint">📥</div>
+                        <div>
+                            <h4>Purchase Bill</h4>
+                            <p>Inward Stock</p>
+                        </div>
+                    </div>
+                    <div class="action-sheet-card" onclick="window.app.openVoucherModal('estimate'); document.getElementById('more-create-modal').classList.remove('active');">
+                        <div class="grid-icon-circle purple-tint">📋</div>
+                        <div>
+                            <h4>Quotation</h4>
+                            <p>Price Estimate</p>
+                        </div>
+                    </div>
+                    <div class="action-sheet-card" onclick="window.app.openVoucherModal('delivery_challan'); document.getElementById('more-create-modal').classList.remove('active');">
+                        <div class="grid-icon-circle emerald-tint">🚚</div>
+                        <div>
+                            <h4>Delivery Challan</h4>
+                            <p>Goods Dispatch</p>
+                        </div>
+                    </div>
+                    <div class="action-sheet-card" onclick="window.app.openVoucherModal('credit_note'); document.getElementById('more-create-modal').classList.remove('active');">
+                        <div class="grid-icon-circle dark-tint">↩️</div>
+                        <div>
+                            <h4>Credit Note</h4>
+                            <p>Sales Return</p>
+                        </div>
+                    </div>
+                    <div class="action-sheet-card" onclick="window.app.openVoucherModal('debit_note'); document.getElementById('more-create-modal').classList.remove('active');">
+                        <div class="grid-icon-circle slate-tint">🔄</div>
+                        <div>
+                            <h4>Debit Note</h4>
+                            <p>Purchase Return</p>
+                        </div>
+                    </div>
+                    <div class="action-sheet-card" onclick="window.app.openVoucherModal('expense'); document.getElementById('more-create-modal').classList.remove('active');">
+                        <div class="grid-icon-circle cyan-tint">💸</div>
+                        <div>
+                            <h4>Expense</h4>
+                            <p>Operational Cost</p>
+                        </div>
+                    </div>
+                    <div class="action-sheet-card" onclick="window.app.openVoucherModal('sales_order'); document.getElementById('more-create-modal').classList.remove('active');">
+                        <div class="grid-icon-circle outline-tint">📦</div>
+                        <div>
+                            <h4>Sales Order</h4>
+                            <p>Order Booking</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="more-create-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 8: DOCUMENT SETTINGS
+         ============================================================== -->
+    <div class="modal-overlay" id="doc-settings-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <h3>Document Settings</h3>
+                <button class="btn-icon modal-close-btn" data-close="doc-settings-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="doc-settings-form">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Invoice Prefix</label>
+                            <input type="text" class="form-control" id="doc-inv-prefix" placeholder="INV-26/" />
+                        </div>
+                        <div class="form-group">
+                            <label>Estimate Prefix</label>
+                            <input type="text" class="form-control" id="doc-est-prefix" placeholder="EST-26/" />
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Challan Prefix</label>
+                            <input type="text" class="form-control" id="doc-dc-prefix" placeholder="DC-26/" />
+                        </div>
+                        <div class="form-group">
+                            <label>Purchase Prefix</label>
+                            <input type="text" class="form-control" id="doc-po-prefix" placeholder="PUR-26/" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Default Terms & Conditions</label>
+                        <textarea class="form-control" id="doc-terms" rows="3" placeholder="Terms and conditions..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Default Invoice Footer Text</label>
+                        <input type="text" class="form-control" id="doc-footer" placeholder="e.g. Thank you for your business! (Leave empty for clean footer)" />
+                    </div>
+                    <div class="form-group">
+                        <label>Signatory Title</label>
+                        <input type="text" class="form-control" id="doc-sig-title" placeholder="Authorised Signatory" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="doc-settings-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save-doc-settings">Save Document Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 9: BUSINESS INSIGHTS & ANALYTICS (100% Offline)
+         ============================================================== -->
+    <div class="modal-overlay" id="insights-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <h3>📊 Business Insights (Offline)</h3>
+                <button class="btn-icon modal-close-btn" data-close="insights-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                    <div style="background:#1e293b; padding:14px; border-radius:10px; border:1px solid #334155;">
+                        <div style="font-size:11px; color:#94a3b8; font-weight:700;">TOTAL REVENUE</div>
+                        <div style="font-size:18px; font-weight:800; color:#10b981; margin-top:4px;" id="insight-sales-val">₹ 0.00</div>
+                    </div>
+                    <div style="background:#1e293b; padding:14px; border-radius:10px; border:1px solid #334155;">
+                        <div style="font-size:11px; color:#94a3b8; font-weight:700;">TOTAL PURCHASES</div>
+                        <div style="font-size:18px; font-weight:800; color:#f59e0b; margin-top:4px;" id="insight-purchases-val">₹ 0.00</div>
+                    </div>
+                    <div style="background:#1e293b; padding:14px; border-radius:10px; border:1px solid #334155;">
+                        <div style="font-size:11px; color:#94a3b8; font-weight:700;">TOTAL RECEIVABLES</div>
+                        <div style="font-size:18px; font-weight:800; color:#ef4444; margin-top:4px;" id="insight-due-val">₹ 0.00</div>
+                    </div>
+                    <div style="background:#1e293b; padding:14px; border-radius:10px; border:1px solid #334155;">
+                        <div style="font-size:11px; color:#94a3b8; font-weight:700;">STOCK INVENTORY VALUE</div>
+                        <div style="font-size:18px; font-weight:800; color:#3b82f6; margin-top:4px;" id="insight-stock-val">₹ 0.00</div>
+                    </div>
+                </div>
+                <div style="background:#181b22; border:1px solid #282e3b; border-radius:10px; padding:14px;">
+                    <h4 style="font-size:13px; font-weight:700; margin-bottom:8px;">Offline Database Statistics</h4>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#94a3b8; padding:4px 0; border-bottom:1px solid #282e3b;">
+                        <span>Invoices / Vouchers:</span>
+                        <strong style="color:#fff;" id="insight-vouchers-count">0</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#94a3b8; padding:4px 0; border-bottom:1px solid #282e3b;">
+                        <span>Products Catalog:</span>
+                        <strong style="color:#fff;" id="insight-items-count">0</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#94a3b8; padding:4px 0;">
+                        <span>Parties (Customers & Vendors):</span>
+                        <strong style="color:#fff;" id="insight-parties-count">0</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="insights-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 10: E-WAY BILL & E-INVOICE GENERATOR (100% Offline)
+         ============================================================== -->
+    <div class="modal-overlay" id="eway-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <h3 id="eway-modal-title">🚚 E-Way Bill & E-Invoice (Offline)</h3>
+                <button class="btn-icon modal-close-btn" data-close="eway-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background:#1e293b; padding:12px; border-radius:8px; margin-bottom:14px; font-size:12px; color:#94a3b8; line-height:1.5;">
+                    Generate GST-compliant E-Way Bill transporter slip and E-Invoice details directly offline from your saved invoices.
+                </div>
+                <div class="form-group">
+                    <label>Select Invoice</label>
+                    <select class="form-control" id="eway-voucher-select">
+                        <option value="">-- Choose Invoice --</option>
+                    </select>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Transporter Name / ID</label>
+                        <input type="text" class="form-control" id="eway-transporter" placeholder="e.g. VRL Logistics" />
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Number</label>
+                        <input type="text" class="form-control" id="eway-vehicle-no" placeholder="e.g. MH-12-AB-1234" />
+                    </div>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Approx Distance (KM)</label>
+                        <input type="number" class="form-control" id="eway-distance" value="50" />
+                    </div>
+                    <div class="form-group">
+                        <label>Transport Doc / LR No.</label>
+                        <input type="text" class="form-control" id="eway-lr-no" placeholder="LR-9876" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="eway-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-generate-eway">Generate Slip</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL: PRODUCT OPTIONS & EXCEL EXPORT SHEET
+         ============================================================== -->
+    <div class="modal-overlay" id="product-options-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="width:30px; height:30px; border-radius:8px; background:rgba(16,185,129,0.15); color:#10b981; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800;">📊</div>
+                    <h3>Product Options & Export</h3>
+                </div>
+                <button class="btn-icon modal-close-btn" data-close="product-options-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:16px;">
+                <!-- Catalog Overview Card -->
+                <div style="background:#1a1e27; border:1px solid #28303f; border-radius:12px; padding:14px; margin-bottom:16px;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:#94a3b8; margin-bottom:8px; font-weight:700;">Catalog Summary</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:8px;">
+                        <div>
+                            <div style="font-size:11px; color:#64748b;">Products</div>
+                            <div style="font-size:16px; font-weight:800; color:#fff;" id="pop-total-items">0</div>
+                        </div>
+                        <div>
+                            <div style="font-size:11px; color:#64748b;">Total Qty</div>
+                            <div style="font-size:16px; font-weight:800; color:#fff;" id="pop-total-stock">0</div>
+                        </div>
+                        <div>
+                            <div style="font-size:11px; color:#64748b;">Stock Valuation</div>
+                            <div style="font-size:16px; font-weight:800; color:#10b981;" id="pop-total-val">₹ 0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Section -->
+                <div style="margin-bottom:18px;">
+                    <div style="font-size:12px; font-weight:700; color:#cbd5e1; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.04em;">Download Product Details</div>
+                    
+                    <!-- Excel Option Card -->
+                    <div class="excel-export-card" id="btn-modal-export-excel" style="background:#13221d; border:1px solid rgba(16,185,129,0.35); border-radius:12px; padding:14px; margin-bottom:10px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:all 0.2s;">
+                        <div style="width:42px; height:42px; border-radius:10px; background:#10b981; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <div style="font-size:14px; font-weight:700; color:#fff;">Download Excel Sheet (.xlsx)</div>
+                                <span style="background:rgba(16,185,129,0.2); color:#34d399; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px;">EXCEL</span>
+                            </div>
+                            <div style="font-size:11px; color:#94a3b8; margin-top:3px;">Full spreadsheet with SKU, HSN, Tax rates, Wholesale & MRP prices, Stock quantities & Valuation</div>
+                        </div>
+                        <div style="color:#10b981;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    </div>
+
+                    <!-- CSV Option Card -->
+                    <div class="excel-export-card" id="btn-modal-export-csv" style="background:#191e28; border:1px solid #28303f; border-radius:12px; padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:all 0.2s;">
+                        <div style="width:42px; height:42px; border-radius:10px; background:#334155; color:#cbd5e1; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; flex-shrink:0;">
+                            📄
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:14px; font-weight:700; color:#fff;">Download CSV File (.csv)</div>
+                            <div style="font-size:11px; color:#94a3b8; margin-top:3px;">Standard CSV compatible with MS Excel, Tally, Zoho, Google Sheets & ERP</div>
+                        </div>
+                        <div style="color:#64748b;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Catalog Actions -->
+                <div>
+                    <div style="font-size:12px; font-weight:700; color:#cbd5e1; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.04em;">Product Catalog Actions</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <button type="button" class="btn btn-secondary" id="btn-pop-add-product" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:11px; font-weight:600;">
+                            <span>➕ Add New Product</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="btn-pop-sort-cycle" style="display:flex; align-items:center; justify-content:center; gap:8px; padding:11px; font-weight:600;">
+                            <span>🔄 Sort Products (Name / Price / Stock)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="product-options-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: INVOICE EXPORT & DATE/DAYS SELECTION (EXCEL / CSV) -->
+    <div class="modal-overlay" id="invoice-export-modal">
+        <div class="modal-container action-sheet-modal" style="max-width:520px; max-height:92vh; overflow-y:auto;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="font-size:22px;">📊</div>
+                    <div>
+                        <h3 class="modal-title" style="margin:0; font-size:16px;">Export Invoices & Sales Report</h3>
+                        <p style="margin:0; font-size:11px; color:#94a3b8;">Download complete invoice ledger in Excel spreadsheet</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close-btn" data-close="invoice-export-modal" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:16px;">
+                <!-- 1. TIME PERIOD / DAYS SELECTION -->
+                <div style="margin-bottom:16px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                        <span style="font-size:12px; font-weight:700; color:#cbd5e1; text-transform:uppercase; letter-spacing:0.04em;">Select Time Period (Days)</span>
+                        <span id="inv-exp-days-badge" style="font-size:11px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); padding:2px 8px; border-radius:12px;">Last 30 Days</span>
+                    </div>
+
+                    <!-- Quick Days Chips -->
+                    <div class="days-chips-scroller" id="inv-days-chips-container">
+                        <button type="button" class="days-chip" data-days="7">7 Days</button>
+                        <button type="button" class="days-chip" data-days="15">15 Days</button>
+                        <button type="button" class="days-chip active" data-days="30">30 Days</button>
+                        <button type="button" class="days-chip" data-days="90">3 Months</button>
+                        <button type="button" class="days-chip" data-days="365">1 Year</button>
+                        <button type="button" class="days-chip" data-days="all">All Time</button>
+                        <button type="button" class="days-chip" data-days="custom">Custom ⚙️</button>
+                    </div>
+
+                    <!-- Custom Days & Date Inputs (Toggleable) -->
+                    <div id="inv-custom-days-panel" style="display:none; background:#141720; border:1px solid #28303f; border-radius:10px; padding:12px; margin-top:8px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                            <label style="font-size:12px; color:#cbd5e1; font-weight:600;">Custom Number of Days:</label>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <button type="button" id="btn-dec-custom-days" style="width:30px; height:30px; background:#1e293b; color:#fff; border:1px solid #334155; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px;">-</button>
+                                <input type="number" id="input-custom-days-count" value="30" min="1" max="1825" style="width:68px; height:30px; text-align:center; background:#0f172a; color:#fff; border:1px solid #38bdf8; border-radius:6px; font-weight:bold; font-size:13px;"/>
+                                <button type="button" id="btn-inc-custom-days" style="width:30px; height:30px; background:#1e293b; color:#fff; border:1px solid #334155; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px;">+</button>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <div>
+                                <label style="font-size:10px; color:#94a3b8; text-transform:uppercase; font-weight:600; display:block; margin-bottom:2px;">From Date</label>
+                                <input type="date" id="input-export-from-date" class="form-input" style="height:32px; font-size:11px;"/>
+                            </div>
+                            <div>
+                                <label style="font-size:10px; color:#94a3b8; text-transform:uppercase; font-weight:600; display:block; margin-bottom:2px;">To Date</label>
+                                <input type="date" id="input-export-to-date" class="form-input" style="height:32px; font-size:11px;"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Range Display Pill -->
+                    <div style="background:#0f141c; border:1px dashed #283244; border-radius:8px; padding:6px 10px; margin-top:8px; display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:13px;">📅</span>
+                        <span id="inv-export-date-range-text" style="font-size:11px; color:#94a3b8; font-family:'JetBrains Mono',monospace;">Calculated date range...</span>
+                    </div>
+                </div>
+
+                <!-- 2. REPORT FILTERS (Voucher Type & Status) -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+                    <div>
+                        <label style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:4px; text-transform:uppercase;">Voucher Type</label>
+                        <select id="inv-export-voucher-type" class="form-input" style="height:36px; font-size:12px; background:#181b22; border:1px solid #28303f; color:#fff; border-radius:8px; width:100%;">
+                            <option value="sales_invoice" selected>Sales Invoices Only</option>
+                            <option value="all">All Invoices & Bills</option>
+                            <option value="purchase_invoice">Purchases Only</option>
+                            <option value="estimate">Quotations / Estimates</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:4px; text-transform:uppercase;">Payment Status</label>
+                        <select id="inv-export-payment-status" class="form-input" style="height:36px; font-size:12px; background:#181b22; border:1px solid #28303f; color:#fff; border-radius:8px; width:100%;">
+                            <option value="all" selected>All (Paid + Pending)</option>
+                            <option value="paid">Paid Only</option>
+                            <option value="pending">Pending / Due Only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 3. LIVE REPORT KPI SUMMARY -->
+                <div class="catalog-summary-box" style="background:#131822; border:1px solid #242c3d; border-radius:12px; padding:12px; margin-bottom:18px;">
+                    <div style="font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:8px;">Live Summary for Selected Period</div>
+                    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; text-align:center;">
+                        <div style="background:#1a202c; padding:8px 4px; border-radius:8px;">
+                            <div style="font-size:10px; color:#94a3b8;">Invoices</div>
+                            <div style="font-size:13px; font-weight:800; color:#fff; margin-top:2px;" id="inv-exp-preview-count">0</div>
+                        </div>
+                        <div style="background:#1a202c; padding:8px 4px; border-radius:8px;">
+                            <div style="font-size:10px; color:#94a3b8;">Total Bill</div>
+                            <div style="font-size:12px; font-weight:800; color:#60a5fa; margin-top:2px;" id="inv-exp-preview-total">₹ 0.00</div>
+                        </div>
+                        <div style="background:#1a202c; padding:8px 4px; border-radius:8px;">
+                            <div style="font-size:10px; color:#94a3b8;">Collected</div>
+                            <div style="font-size:12px; font-weight:800; color:#34d399; margin-top:2px;" id="inv-exp-preview-paid">₹ 0.00</div>
+                        </div>
+                        <div style="background:#1a202c; padding:8px 4px; border-radius:8px;">
+                            <div style="font-size:10px; color:#94a3b8;">Pending</div>
+                            <div style="font-size:12px; font-weight:800; color:#f87171; margin-top:2px;" id="inv-exp-preview-due">₹ 0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. DOWNLOAD ACTION CARDS -->
+                <div>
+                    <div style="font-size:12px; font-weight:700; color:#cbd5e1; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.04em;">Download Report Spreadsheet</div>
+                    
+                    <!-- Excel Option Card -->
+                    <div class="excel-export-card" id="btn-export-invoices-excel-action" style="background:#13221d; border:1px solid rgba(16,185,129,0.35); border-radius:12px; padding:14px; margin-bottom:10px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:all 0.2s;">
+                        <div style="width:42px; height:42px; border-radius:10px; background:#10b981; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <div style="font-size:14px; font-weight:700; color:#fff;">Download Excel Sheet (.xlsx)</div>
+                                <span style="background:rgba(16,185,129,0.2); color:#34d399; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px;">EXCEL</span>
+                            </div>
+                            <div style="font-size:11px; color:#94a3b8; margin-top:3px;">Full spreadsheet with Invoice Summary & Item-Wise Breakdown tabs, GST breakups & Totals</div>
+                        </div>
+                        <div style="color:#10b981;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    </div>
+
+                    <!-- CSV Option Card -->
+                    <div class="excel-export-card" id="btn-export-invoices-csv-action" style="background:#191e28; border:1px solid #28303f; border-radius:12px; padding:14px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:all 0.2s;">
+                        <div style="width:42px; height:42px; border-radius:10px; background:#334155; color:#cbd5e1; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; flex-shrink:0;">
+                            📄
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:14px; font-weight:700; color:#fff;">Download CSV File (.csv)</div>
+                            <div style="font-size:11px; color:#94a3b8; margin-top:3px;">Standard CSV compatible with MS Excel, Tally ERP, Zoho Books, Google Sheets & ERP</div>
+                        </div>
+                        <div style="color:#64748b;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    </div>
+
+                    <!-- Quick Option to Edit Terms & Conditions directly below Excel & CSV download -->
+                    <div class="excel-export-card" id="btn-export-modal-edit-terms" style="background:#1e1b18; border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:12px 14px; margin-top:10px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:all 0.2s;">
+                        <div style="width:42px; height:42px; border-radius:10px; background:rgba(245,158,11,0.15); color:#f59e0b; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">
+                            📝
+                        </div>
+                        <div style="flex:1;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <div style="font-size:13px; font-weight:700; color:#fff;">Edit Terms & Conditions</div>
+                                <span style="background:rgba(245,158,11,0.2); color:#fbbf24; font-size:9px; font-weight:800; padding:1px 5px; border-radius:4px;">INVOICE SETTINGS</span>
+                            </div>
+                            <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Update payment terms, warranty & declaration for printed & PDF invoices</div>
+                        </div>
+                        <div style="color:#64748b;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding:12px 16px; border-top:1px solid #242c3d; display:flex; justify-content:flex-end;">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="invoice-export-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 13: TERMS & CONDITIONS EDITOR
+         ============================================================== -->
+    <div class="modal-overlay" id="terms-conditions-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:20px;">📝</span>
+                    <div>
+                        <h3 style="margin:0; font-size:16px;">Invoice Terms & Conditions</h3>
+                        <p style="margin:0; font-size:11px; color:#94a3b8;">Printed on bottom of Invoices, Estimates & PDF reports</p>
+                    </div>
+                </div>
+                <button class="btn-icon modal-close-btn" data-close="terms-conditions-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:16px;">
+                <!-- Quick Preset Chips -->
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; display:block; margin-bottom:6px;">Quick Presets</label>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        <button type="button" class="btn btn-secondary btn-sm terms-preset-btn" data-preset="standard" style="padding:4px 8px; font-size:11px;">Standard B2B</button>
+                        <button type="button" class="btn btn-secondary btn-sm terms-preset-btn" data-preset="international" style="padding:4px 8px; font-size:11px;">International / Export</button>
+                        <button type="button" class="btn btn-secondary btn-sm terms-preset-btn" data-preset="services" style="padding:4px 8px; font-size:11px;">Services / Consulting</button>
+                        <button type="button" class="btn btn-secondary btn-sm terms-preset-btn" data-preset="retail" style="padding:4px 8px; font-size:11px;">Retail / Cash Sale</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="font-size:12px; font-weight:700; color:#cbd5e1; display:flex; justify-content:space-between;">
+                        <span>Terms & Conditions Text</span>
+                        <span style="font-size:10px; color:#94a3b8; font-weight:normal;">Each line will appear formatted on invoice</span>
+                    </label>
+                    <textarea class="form-control" id="terms-textarea" rows="6" style="font-family:inherit; font-size:12px; line-height:1.4; resize:vertical; padding:10px;" placeholder="1. Goods once sold will not be taken back.&#10;2. Payment within 30 days.&#10;3. Subject to local jurisdiction."></textarea>
+                </div>
+
+                <div style="background:#1e293b; border-radius:8px; padding:10px 12px; font-size:11px; color:#94a3b8; display:flex; gap:8px; align-items:flex-start;">
+                    <span style="font-size:14px; flex-shrink:0;">💡</span>
+                    <span>These terms and payment conditions will automatically reflect on all Dot-Matrix, Classic, and PDF invoices.</span>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding:12px 16px; display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="terms-conditions-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save-terms-modal">💾 Save Terms</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 14: INVOICE FOOTER EDITOR
+         ============================================================== -->
+    <div class="modal-overlay" id="footer-modal">
+        <div class="modal-card modal-mobile-sheet">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:20px;">📄</span>
+                    <div>
+                        <h3 style="margin:0; font-size:16px;">Edit Invoice Footer</h3>
+                        <p style="margin:0; font-size:11px; color:#94a3b8;">Custom text printed at the bottom of Invoices & PDFs</p>
+                    </div>
+                </div>
+                <button class="btn-icon modal-close-btn" data-close="footer-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:16px;">
+                <!-- Quick Preset Chips -->
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; display:block; margin-bottom:6px;">Quick Presets</label>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        <button type="button" class="btn btn-secondary btn-sm footer-preset-btn" data-preset="blank" style="padding:4px 8px; font-size:11px; color:#ef4444;">Clear / Blank</button>
+                        <button type="button" class="btn btn-secondary btn-sm footer-preset-btn" data-preset="thanks" style="padding:4px 8px; font-size:11px;">Thank You Note</button>
+                        <button type="button" class="btn btn-secondary btn-sm footer-preset-btn" data-preset="jurisdiction" style="padding:4px 8px; font-size:11px;">Jurisdiction</button>
+                        <button type="button" class="btn btn-secondary btn-sm footer-preset-btn" data-preset="computer" style="padding:4px 8px; font-size:11px;">Computer Generated</button>
+                        <button type="button" class="btn btn-secondary btn-sm footer-preset-btn" data-preset="eoe" style="padding:4px 8px; font-size:11px;">E. & O.E.</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="font-size:12px; font-weight:700; color:#cbd5e1; display:flex; justify-content:space-between;">
+                        <span>Footer Text</span>
+                        <span style="font-size:10px; color:#94a3b8; font-weight:normal;">Leave blank for clean look</span>
+                    </label>
+                    <textarea class="form-control" id="footer-textarea" rows="3" style="font-family:inherit; font-size:12px; line-height:1.4; resize:vertical; padding:10px;" placeholder="e.g. Thank you for your business! / Subject to local jurisdiction (Leave empty for no footer)"></textarea>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; padding:10px 12px; background:var(--card-bg, #1e2430); border-radius:8px; border:1px solid var(--border-color, #28303f);">
+                    <input type="checkbox" id="footer-set-default" style="width:16px; height:16px; accent-color:var(--primary, #2563eb); cursor:pointer;"/>
+                    <label for="footer-set-default" style="font-size:12px; font-weight:600; color:var(--text, #f1f5f9); cursor:pointer; margin:0;">
+                        Save as default footer for all future invoices
+                    </label>
+                </div>
+
+                <div style="background:#1e293b; border-radius:8px; padding:10px 12px; font-size:11px; color:#94a3b8; display:flex; gap:8px; align-items:flex-start;">
+                    <span style="font-size:14px; flex-shrink:0;">💡</span>
+                    <span>The old default text ("standard commercial invoice, suitable for dot matrix etc.") has been removed. You have complete control over what appears in your footer.</span>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding:12px 16px; display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="footer-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save-footer-modal">💾 Apply & Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 8: UPDATE PAYMENT STATUS MODAL (Paid / Partially Paid / Due)
+         ============================================================== -->
+    <div class="modal-overlay" id="payment-status-modal">
+        <div class="modal-card modal-mobile-sheet" style="max-width:440px;">
+            <div class="modal-header">
+                <h3 id="paystatus-modal-title">Update Payment Status</h3>
+                <button class="btn-icon modal-close-btn" data-close="payment-status-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="payment-status-form">
+                    <input type="hidden" id="paystatus-voucher-id"/>
+                    
+                    <div style="background:var(--bg-card-sub, #f8fafc); border:1px solid var(--border-color, #e2e8f0); border-radius:8px; padding:12px; margin-bottom:14px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <span style="color:var(--text-sub, #64748b); font-size:12px;">Invoice Total:</span>
+                            <strong style="font-size:15px; color:var(--text-primary, #0f172a);" id="paystatus-grand-total">₹ 0.00</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:var(--text-sub, #64748b); font-size:12px;">Party / Customer:</span>
+                            <span style="font-size:12px; font-weight:600;" id="paystatus-party-name">-</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label style="font-weight:700; margin-bottom:6px; display:block;">Select Status</label>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+                            <button type="button" class="btn btn-sm paystatus-btn" data-status="paid" id="btn-paystatus-paid" style="border:1.5px solid #16a34a; background:#f0fdf4; color:#16a34a; font-weight:700; padding:8px 4px;">🟢 Paid</button>
+                            <button type="button" class="btn btn-sm paystatus-btn" data-status="partial" id="btn-paystatus-partial" style="border:1.5px solid #d97706; background:#fffbeb; color:#d97706; font-weight:700; padding:8px 4px;">🟡 Partial</button>
+                            <button type="button" class="btn btn-sm paystatus-btn" data-status="unpaid" id="btn-paystatus-due" style="border:1.5px solid #dc2626; background:#fef2f2; color:#dc2626; font-weight:700; padding:8px 4px;">🔴 Due</button>
+                        </div>
+                    </div>
+
+                    <div id="paystatus-amount-section" style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">Amount Received / Paid (₹) *</label>
+                        <input type="number" class="form-control" id="paystatus-paid-input" step="0.01" min="0" placeholder="0.00" style="font-size:16px; font-weight:700;"/>
+                        
+                        <!-- Quick percentage chips -->
+                        <div style="display:flex; gap:6px; margin-top:8px;">
+                            <button type="button" class="btn btn-sm" id="btn-pay-pct-25" style="flex:1; padding:4px; font-size:11px; background:var(--bg-card-sub, #f1f5f9); border:1px solid #cbd5e1;">25%</button>
+                            <button type="button" class="btn btn-sm" id="btn-pay-pct-50" style="flex:1; padding:4px; font-size:11px; background:var(--bg-card-sub, #f1f5f9); border:1px solid #cbd5e1;">50%</button>
+                            <button type="button" class="btn btn-sm" id="btn-pay-pct-75" style="flex:1; padding:4px; font-size:11px; background:var(--bg-card-sub, #f1f5f9); border:1px solid #cbd5e1;">75%</button>
+                            <button type="button" class="btn btn-sm" id="btn-pay-pct-100" style="flex:1; padding:4px; font-size:11px; background:var(--bg-card-sub, #f1f5f9); border:1px solid #cbd5e1;">100%</button>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px; font-weight:700;">
+                            <span>Remaining Balance Due:</span>
+                            <span id="paystatus-balance-due" style="color:#dc2626;">₹ 0.00</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="padding:12px 16px; display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="payment-status-modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save-payment-status">Save Status</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 16: PARTY KHATA / ACCOUNT LEDGER (100% Offline)
+         ============================================================== -->
+    <div class="modal-overlay" id="party-ledger-modal">
+        <div class="modal-card modal-mobile-sheet" style="max-width:680px;">
+            <div class="modal-header">
+                <div>
+                    <h3 id="ledger-party-name" style="margin:0;">Party Statement / Khata</h3>
+                    <div style="font-size:11px; color:var(--text-sub, #94a3b8);" id="ledger-party-sub">-</div>
+                </div>
+                <button class="btn-icon modal-close-btn" data-close="party-ledger-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:14px;">
+                <div class="ledger-stat-grid">
+                    <div class="ledger-stat-card">
+                        <div class="label">Total Billed</div>
+                        <div class="val" id="ledger-total-billed" style="color:var(--primary, #3b82f6);">₹ 0.00</div>
+                    </div>
+                    <div class="ledger-stat-card">
+                        <div class="label">Total Paid</div>
+                        <div class="val" id="ledger-total-paid" style="color:#22c55e;">₹ 0.00</div>
+                    </div>
+                    <div class="ledger-stat-card">
+                        <div class="label">Balance Due</div>
+                        <div class="val" id="ledger-total-due" style="color:#ef4444;">₹ 0.00</div>
+                    </div>
+                </div>
+
+                <div class="ledger-table-wrap">
+                    <table class="ledger-table" id="ledger-transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Ref / Inv #</th>
+                                <th>Type</th>
+                                <th style="text-align:right;">Debit (Bill)</th>
+                                <th style="text-align:right;">Credit (Paid)</th>
+                                <th style="text-align:right;">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledger-table-body">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="party-ledger-modal">Close</button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-success btn-sm" id="btn-ledger-whatsapp" style="display:inline-flex; align-items:center; gap:4px;">
+                        <span>💬</span><span>WhatsApp Khata</span>
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" id="btn-ledger-download-pdf" style="display:inline-flex; align-items:center; gap:4px;">
+                        <span>📥</span><span>Download Statement PDF</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 17: OFFLINE CAMERA BARCODE SCANNER
+         ============================================================== -->
+    <div class="modal-overlay" id="camera-scanner-modal">
+        <div class="modal-card modal-mobile-sheet" style="max-width:440px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:18px;">📷</span>
+                    <h3 style="margin:0; font-size:15px; font-weight:700;">Scan Product Barcode / QR</h3>
+                </div>
+                <button class="btn-icon modal-close-btn" id="btn-close-scanner" data-close="camera-scanner-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:14px; text-align:center;">
+                <div class="scanner-viewport-box">
+                    <video id="camera-scanner-video" class="scanner-video-feed" playsinline muted></video>
+                    <div class="scanner-viewfinder">
+                        <div class="scanner-laser"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-scanner-switch-camera">🔄 Flip Camera</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-scanner-torch">💡 Torch</button>
+                </div>
+
+                <!-- Manual Input Fallback -->
+                <div style="margin-top:14px; padding-top:12px; border-top:1px dashed var(--border-color, #334155);">
+                    <div style="font-size:11px; color:var(--text-sub, #94a3b8); margin-bottom:6px;">Can't scan? Type Barcode / SKU manually:</div>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" class="form-control" id="scanner-manual-input" placeholder="Enter barcode or SKU..." style="font-size:13px; font-weight:700;"/>
+                        <button type="button" class="btn btn-primary" id="btn-scanner-manual-submit" style="padding:6px 14px;">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         MODAL 18: 1-CLICK BACKUP & RESTORE DATA (100% Offline)
+         ============================================================== -->
+    <div class="modal-overlay" id="backup-restore-modal">
+        <div class="modal-card modal-mobile-sheet" style="max-width:520px;">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:18px;">💾</span>
+                    <h3 style="margin:0; font-size:15px; font-weight:700;">Offline Backup & Restore Data</h3>
+                </div>
+                <button class="btn-icon modal-close-btn" data-close="backup-restore-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:14px;">
+                <!-- SECTION 1: EXPORT / CREATE BACKUP -->
+                <div class="backup-section-card">
+                    <h4><span>📥</span> Full Database Backup</h4>
+                    <p style="font-size:12px; color:var(--text-sub, #94a3b8); margin:0 0 10px 0; line-height:1.4;">
+                        Export all your business data (Company profile, products, stock, customer ledgers, and all invoices) into a safe, portable <code>.json</code> file.
+                    </p>
+                    <div style="font-size:11px; font-weight:700; color:var(--text-primary, #f1f5f9); margin-bottom:10px; padding:6px 10px; background:rgba(255,255,255,0.04); border-radius:6px;" id="backup-stats-summary">
+                        Loading database statistics...
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-primary btn-sm" id="btn-do-backup-export" style="display:inline-flex; align-items:center; gap:6px; flex:1;">
+                            <span>💾 Download Backup File</span>
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm" id="btn-do-backup-share" style="display:inline-flex; align-items:center; gap:6px;">
+                            <span>📤 Share (WhatsApp)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: IMPORT / RESTORE BACKUP -->
+                <div class="backup-section-card" style="margin-bottom:0;">
+                    <h4 style="color:#22c55e;"><span>📂</span> Import Data & Restore</h4>
+                    <p style="font-size:12px; color:var(--text-sub, #94a3b8); margin:0 0 10px 0; line-height:1.4;">
+                        Transfer a backup file from WhatsApp or another phone. Select the downloaded <code>.json</code> backup file to restore all your data on this device.
+                    </p>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-trigger-file-restore" style="display:inline-flex; align-items:center; gap:6px; width:100%; justify-content:center; padding:10px;">
+                        <span>📁 Select Backup File (.json)</span>
+                    </button>
+
+                    <!-- Preview of selected restore file -->
+                    <div id="restore-preview-box" class="restore-preview-panel" style="display:none;">
+                        <div style="display:flex; align-items:center; gap:8px; font-weight:700; color:#15803d; font-size:13px; margin-bottom:6px;">
+                            <span>✓</span><span>Valid Backup File Detected</span>
+                        </div>
+                        <div id="restore-preview-details" style="font-size:11.5px; color:var(--text-primary, #1e293b); line-height:1.4;">
+                            <!-- File details dynamically populated -->
+                        </div>
+                        <button type="button" class="btn btn-success btn-sm" id="btn-confirm-restore-now" style="width:100%; margin-top:10px; font-weight:800; padding:10px;">
+                            🔄 Confirm & Restore All Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end;">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="backup-restore-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Host -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Hidden Backup Restore File Input -->
+    <input type="file" id="backup-file-input" accept=".json" style="display:none;"/>
+
+    <!-- Scripts -->
+    <script src="js/xlsx.full.min.js"></script>
+    <script src="js/html2pdf.bundle.min.js"></script>
+    <script src="js/db.js?v=4"></script>
+    <script src="js/models.js?v=4"></script>
+    <script src="js/signature-pad.js?v=4"></script>
+    <script src="js/invoice-printer.js?v=4"></script>
+    <script src="js/app.js?v=4"></script>
+</body>
+</html>
