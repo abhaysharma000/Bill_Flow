@@ -1,31 +1,31 @@
-﻿{
-  name: bill-flow,
-  version: 1.0.0,
-  description: BillFlow - Smart GST Invoicing, Inventory & Khata Ledger Management App,
-  main: sw.js,
-  scripts: {
-    build: node build_www.js && npx cap copy android,
-    cap:sync: node build_www.js && npx cap sync android,
-    test: echo "Error: no test specified" && exit 1
+{
+  "name": "bill-flow",
+  "version": "1.0.0",
+  "description": "BillFlow - Smart GST Invoicing, Inventory & Khata Ledger Management App",
+  "main": "sw.js",
+  "scripts": {
+    "build": "node build_www.js && npx cap copy android",
+    "cap:sync": "node build_www.js && npx cap sync android",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  keywords: [
-    invoicing,
-    gst,
-    billing,
-    accounting,
-    capacitor,
-    android
+  "keywords": [
+    "invoicing",
+    "gst",
+    "billing",
+    "accounting",
+    "capacitor",
+    "android"
   ],
-  author: Abhay Sharma,
-  license: ISC,
-  type: commonjs,
-  dependencies: {
-    @capacitor/android: ^8.5.2,
-    @capacitor/cli: ^8.5.2,
-    @capacitor/core: ^8.5.2,
-    @capacitor/filesystem: ^8.1.4,
-    @capacitor/share: ^8.0.3,
-    html2pdf.js: ^0.14.0,
-    xlsx: ^0.18.5
+  "author": "Abhay Sharma",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/share": "^8.0.3",
+    "html2pdf.js": "^0.14.0",
+    "xlsx": "^0.18.5"
   }
 }

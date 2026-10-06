@@ -1634,7 +1634,15 @@ class BillFlowMobileApp {
         const party = this.parties.find(p => p.id === voucher.partyId);
 
         const selector = document.getElementById('print-template-selector');
-        this.activePrintTemplate = selector?.value || 'dot_matrix_international';
+        if (voucher.voucherType === 'estimate') {
+            if (selector) selector.value = 'swastik_quotation';
+            this.activePrintTemplate = 'swastik_quotation';
+        } else {
+            if (selector && selector.value === 'swastik_quotation') {
+                selector.value = 'swastik_tax_invoice';
+            }
+            this.activePrintTemplate = selector?.value || 'swastik_tax_invoice';
+        }
 
         const fontSelector = document.getElementById('print-font-selector');
         this.activePrintFont = fontSelector?.value || 'font-arial';
@@ -1654,7 +1662,11 @@ class BillFlowMobileApp {
         const scaleClass = this.activePrintScale || 'font-scale-standard';
         const copyType = document.getElementById('print-copy-selector')?.value || this.activeInvoiceCopy || 'ORIGINAL FOR RECIPIENT';
 
-        if (this.activePrintTemplate === 'dot_matrix_international') {
+        if (this.activePrintTemplate === 'swastik_tax_invoice') {
+            host.innerHTML = InvoicePrinter.renderSwastikFormat(voucher, company, party, 'tax_invoice', copyType);
+        } else if (this.activePrintTemplate === 'swastik_quotation') {
+            host.innerHTML = InvoicePrinter.renderSwastikFormat(voucher, company, party, 'quotation', copyType);
+        } else if (this.activePrintTemplate === 'dot_matrix_international') {
             host.innerHTML = InvoicePrinter.renderDotMatrixInternational(voucher, company, party, fontClass, scaleClass, copyType);
         } else if (this.activePrintTemplate === 'thermal_80mm') {
             host.innerHTML = InvoicePrinter.renderThermalReceipt(voucher, company, party, '80mm');

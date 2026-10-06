@@ -1106,6 +1106,231 @@ class InvoicePrinter {
         `;
     }
 
+    // Generate HTML for Swastik Dynamic Projects Corporate / Engineering Tax Invoice & Quotation
+    static renderSwastikFormat(voucher, company, party, templateType = 'tax_invoice', copyType = 'ORIGINAL FOR RECIPIENT') {
+        const isQuotation = (templateType === 'quotation' || voucher.voucherType === 'estimate');
+        const docTitle = isQuotation ? 'QUOTATION' : 'TAX INVOICE';
+        const docNumLabel = isQuotation ? 'Quotation No.' : 'Invoice No.';
+
+        // Calculate totals
+        let totalItemsQty = 0;
+        let totalTaxableValue = 0;
+        let totalDiscount = 0;
+        const items = voucher.items || [];
+        for (const itm of items) {
+            totalItemsQty += (Number(itm.quantity) || 0);
+            totalTaxableValue += (Number(itm.taxableAmount) || 0);
+            totalDiscount += (Number(itm.discountAmount) || 0);
+        }
+        if (totalTaxableValue === 0 && voucher.taxableAmount) {
+            totalTaxableValue = Number(voucher.taxableAmount) || 0;
+        }
+
+        // Company Details with fallback to sample if empty
+        const compName = (company.businessName && company.businessName !== 'My Enterprise') ? company.businessName : 'SWASTIK DYNAMIC PROJECTS PVT. LTD.';
+        const compAddress = company.address ? `${company.address}${company.city ? ', ' + company.city : ''}${company.state ? ', ' + company.state : ''}${company.pincode ? ' - ' + company.pincode : ''}` : 'Plot No. 558 - A, Dwarika City, Chhapraula, Ghaziabad, Uttar Pradesh, PIN - 201009';
+        const compTele = company.phone || '+91 9217916162';
+        const compEmail = company.email || 'swastikdynamicprojects@gmail.com';
+        const compGstin = company.gstin || '09ABTCS0027Q1ZL';
+        const bankName = company.bankDetails?.bankName || 'HDFC BANK';
+        const bankAc = company.bankDetails?.accountNumber || '50200118621206';
+        const bankIfsc = company.bankDetails?.ifscCode || 'HDFC0005299';
+        const bankHolder = company.bankDetails?.accountName || compName;
+
+        // Ensure minimum 5 rows for authentic look
+        const minRows = 5;
+        const emptyRowsCount = Math.max(0, minRows - items.length);
+
+        // SVG Compass Logo if no custom logo provided
+        const compassLogoSvg = `
+        <svg width="68" height="68" viewBox="0 0 100 100" class="swastik-compass-logo" style="display:block; flex-shrink:0;">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#1e3a8a" stroke-width="1.5" stroke-dasharray="2,2"/>
+            <circle cx="50" cy="18" r="7" fill="#1e3a8a"/>
+            <circle cx="50" cy="18" r="4" fill="#ffffff"/>
+            <circle cx="50" cy="18" r="2" fill="#1e3a8a"/>
+            <rect x="47" y="10" width="6" height="6" fill="#1e3a8a" rx="1"/>
+            <path d="M 28 62 A 38 38 0 0 1 72 62" fill="none" stroke="#1e3a8a" stroke-width="3"/>
+            <path d="M 28 62 A 38 38 0 0 1 72 62" fill="none" stroke="#ffffff" stroke-width="1" stroke-dasharray="1.5,2.5"/>
+            <polygon points="46,24 50,24 22,88 18,88" fill="#1e3a8a"/>
+            <polygon points="50,24 54,24 82,88 78,88" fill="#1e3a8a"/>
+            <line x1="28" y1="52" x2="72" y2="52" stroke="#1e3a8a" stroke-width="2"/>
+            <circle cx="50" cy="52" r="5" fill="#1e3a8a"/>
+            <circle cx="50" cy="52" r="2" fill="#ffffff"/>
+            <line x1="12" y1="90" x2="88" y2="90" stroke="#1e3a8a" stroke-width="1" stroke-dasharray="3,3"/>
+        </svg>
+        `;
+
+        return `
+        <div class="print-document a4-sheet swastik-template">
+            <!-- Top Centered Header -->
+            <div class="swastik-header-title">${docTitle}</div>
+            
+            <!-- Outer Box -->
+            <div class="swastik-box">
+                <!-- Company Info Banner -->
+                <div class="swastik-company-row">
+                    <div class="swastik-company-branding">
+                        ${company.logoUrl ? `<img src="${company.logoUrl}" class="swastik-custom-logo" alt="Logo"/>` : compassLogoSvg}
+                        <div class="swastik-company-text">
+                            <h1 class="swastik-comp-name">${compName}</h1>
+                            <div class="swastik-comp-meta">
+                                <div><strong>Address:</strong> ${compAddress}</div>
+                                <div><strong>Tele:</strong> ${compTele}, <strong>E-Mail:</strong> ${compEmail}, <strong>GST no:</strong> ${compGstin}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bill To & Meta Section -->
+                <div class="swastik-meta-row">
+                    <div class="swastik-bill-to-col">
+                        <div class="swastik-sub-heading">Bill To:</div>
+                        <div class="swastik-party-details">
+                            <div class="swastik-party-name">${party ? (party.companyName || party.name) : (voucher.partyName || 'Cash / Walk-in Customer')}</div>
+                            ${(party?.billingAddress || voucher.partyAddress) ? `<div class="swastik-party-address">${party?.billingAddress || voucher.partyAddress}</div>` : ''}
+                            ${(party?.phone || voucher.partyPhone) ? `<div><strong>Phone:</strong> ${party?.phone || voucher.partyPhone}</div>` : ''}
+                            ${(party?.gstin || voucher.partyGstin) ? `<div><strong>GSTIN:</strong> ${party?.gstin || voucher.partyGstin}</div>` : ''}
+                            ${(party?.state || voucher.partyState) ? `<div><strong>State:</strong> ${party?.state || voucher.partyState}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="swastik-inv-meta-col">
+                        <div class="swastik-meta-item">
+                            <span class="swastik-meta-lbl">${docNumLabel}:</span>
+                            <span class="swastik-meta-val">${voucher.voucherNo}</span>
+                        </div>
+                        <div class="swastik-meta-item">
+                            <span class="swastik-meta-lbl">Dated:-</span>
+                            <span class="swastik-meta-val">${InvoiceEngine.formatDate(voucher.date)}</span>
+                        </div>
+                        ${voucher.dueDate ? `
+                        <div class="swastik-meta-item">
+                            <span class="swastik-meta-lbl">Due Date:-</span>
+                            <span class="swastik-meta-val">${InvoiceEngine.formatDate(voucher.dueDate)}</span>
+                        </div>
+                        ` : ''}
+                        ${copyType ? `
+                        <div class="swastik-copy-badge">${copyType}</div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Services Description Table -->
+                <table class="swastik-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 55%; text-align: left;">Services Description</th>
+                            <th style="width: 15%; text-align: center;">STN/TKM</th>
+                            <th style="width: 15%; text-align: right;">Rate</th>
+                            <th style="width: 15%; text-align: right;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(itm => `
+                            <tr>
+                                <td style="text-align: left;">
+                                    <strong>${itm.name}</strong>
+                                    ${itm.description ? `<div style="font-size: 8.5px; color: #475569; margin-top: 1px;">${itm.description}</div>` : ''}
+                                </td>
+                                <td style="text-align: center;">${itm.hsn || itm.unit || (itm.quantity + (itm.unit ? ' ' + itm.unit : ''))}</td>
+                                <td style="text-align: right;">${InvoiceEngine.formatCurrency(itm.rate, false)}</td>
+                                <td style="text-align: right;">${InvoiceEngine.formatCurrency(itm.taxableAmount || (itm.quantity * itm.rate), false)}</td>
+                            </tr>
+                        `).join('')}
+                        ${Array.from({ length: emptyRowsCount }).map(() => `
+                            <tr class="swastik-empty-row">
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td style="text-align: right;">0.00</td>
+                            </tr>
+                        `).join('')}
+                        <!-- TOTAL ROW -->
+                        <tr class="swastik-total-row">
+                            <td colspan="3" style="text-align: right; font-weight: 800; letter-spacing: 0.5px;">TOTAL</td>
+                            <td style="text-align: right; font-weight: 800;">${InvoiceEngine.formatCurrency(totalTaxableValue, false)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Middle Details & Calculation Grid -->
+                <div class="swastik-mid-grid">
+                    <div class="swastik-mid-left">
+                        <div class="swastik-cheque-note">
+                            Make all cheques payable to <strong>${bankHolder}</strong>
+                        </div>
+                        <div class="swastik-comments-box">
+                            <strong>Other Comments:</strong><br/>
+                            1. Please Include the ${isQuotation ? 'quotation' : 'invoice'} number on your check
+                        </div>
+                        <div class="swastik-amount-payable">
+                            <strong>Amount Payable:</strong> <span class="swastik-payable-figure">${InvoiceEngine.formatCurrency(voucher.totalAmount)}</span>
+                        </div>
+                        <div class="swastik-amount-words">
+                            <strong>Amount (in words):</strong> ${InvoiceEngine.amountToWords(voucher.totalAmount)}
+                        </div>
+                        <div class="swastik-satisfaction-clause">
+                            I agree that all Services have been received to my Satisfaction
+                        </div>
+                    </div>
+                    <div class="swastik-mid-right">
+                        <table class="swastik-tax-summary-table">
+                            <tr>
+                                <td>Less: Discount</td>
+                                <td style="text-align: right;">${InvoiceEngine.formatCurrency(totalDiscount, false)}</td>
+                            </tr>
+                            <tr>
+                                <td>Taxable Value</td>
+                                <td style="text-align: right;">${InvoiceEngine.formatCurrency(totalTaxableValue, false)}</td>
+                            </tr>
+                            <tr>
+                                <td>SGST@9%</td>
+                                <td style="text-align: right;">${InvoiceEngine.formatCurrency(voucher.totalSgst || 0, false)}</td>
+                            </tr>
+                            <tr>
+                                <td>CGST @9%</td>
+                                <td style="text-align: right;">${InvoiceEngine.formatCurrency(voucher.totalCgst || 0, false)}</td>
+                            </tr>
+                            <tr>
+                                <td>IGST @18%</td>
+                                <td style="text-align: right;">${InvoiceEngine.formatCurrency(voucher.totalIgst || 0, false)}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bank Details & Authorised Signatory Section -->
+                <div class="swastik-footer-grid">
+                    <div class="swastik-bank-box">
+                        <div class="swastik-bank-title">Bank Details:-</div>
+                        <div class="swastik-bank-row"><strong>NAME: -</strong> ${bankHolder}</div>
+                        <div class="swastik-bank-row"><strong>AC NO: -</strong> ${bankAc}</div>
+                        <div class="swastik-bank-row"><strong>BANK NAME: -</strong> ${bankName}</div>
+                        <div class="swastik-bank-row"><strong>IFSC CODE: -</strong> ${bankIfsc}</div>
+                    </div>
+                    <div class="swastik-sign-box">
+                        <div class="swastik-for-company">FOR ${compName.toUpperCase()}</div>
+                        <div class="swastik-sign-area">
+                            ${company.signatureUrl ? `
+                                <img src="${company.signatureUrl}" class="swastik-signature-img" alt="Sign"/>
+                            ` : `
+                                <svg class="swastik-sign-svg" viewBox="0 0 160 50" width="130" height="42">
+                                    <path d="M 12 36 C 28 14, 38 42, 54 22 C 72 8, 78 38, 102 16 C 118 6, 138 28, 152 20 M 20 42 L 140 40" fill="none" stroke="#1d4ed8" stroke-width="2.2" stroke-linecap="round"/>
+                                </svg>
+                            `}
+                        </div>
+                        <div class="swastik-auth-signatory">Authorised Signatory</div>
+                    </div>
+                </div>
+
+                <!-- Bottom Banner -->
+                <div class="swastik-bottom-banner">
+                    THANK YOU FOR YOUR BUSINESS!
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
     // Trigger Print Action
     static printDocument(containerHtml) {
         let printFrame = document.getElementById('print-iframe');

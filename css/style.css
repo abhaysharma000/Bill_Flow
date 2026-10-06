@@ -3382,5 +3382,329 @@ textarea.form-control {
     margin-top: 10px;
 }
 
+/* ==========================================================================
+   TEMPLATE: SWASTIK DYNAMIC CORPORATE (TAX INVOICE & QUOTATION)
+   ========================================================================== */
+.swastik-template {
+    width: 100%;
+    max-width: 820px;
+    margin: 0 auto;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    box-sizing: border-box;
+    padding: 10px 14px;
+}
+
+.swastik-template .swastik-header-title {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #000000;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.swastik-template .swastik-box {
+    border: 1.5px solid #000000;
+    box-sizing: border-box;
+    background: #ffffff;
+}
+
+.swastik-template .swastik-company-row {
+    padding: 8px 12px;
+    border-bottom: 1.5px solid #000000;
+}
+
+.swastik-template .swastik-company-branding {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.swastik-template .swastik-custom-logo {
+    max-height: 65px;
+    max-width: 120px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.swastik-template .swastik-comp-name {
+    margin: 0 0 3px 0;
+    font-size: 21px;
+    font-weight: 900;
+    color: #1e3a8a;
+    letter-spacing: 1.2px;
+    line-height: 1.1;
+    text-transform: uppercase;
+    font-family: 'Arial Black', Arial, sans-serif;
+}
+
+.swastik-template .swastik-comp-meta {
+    font-size: 9px;
+    line-height: 1.35;
+    color: #000000;
+    font-weight: 500;
+}
+
+.swastik-template .swastik-meta-row {
+    display: flex;
+    border-bottom: 1.5px solid #000000;
+}
+
+.swastik-template .swastik-bill-to-col {
+    flex: 1.6;
+    padding: 6px 10px;
+    border-right: 1.5px solid #000000;
+    font-size: 9.5px;
+    line-height: 1.35;
+}
+
+.swastik-template .swastik-sub-heading {
+    font-weight: 800;
+    font-size: 10px;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.swastik-template .swastik-party-name {
+    font-size: 11px;
+    font-weight: 800;
+    color: #000000;
+    margin-bottom: 2px;
+}
+
+.swastik-template .swastik-inv-meta-col {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 9.5px;
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.swastik-template .swastik-meta-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.swastik-template .swastik-meta-lbl {
+    font-weight: 700;
+}
+
+.swastik-template .swastik-meta-val {
+    font-weight: 800;
+}
+
+.swastik-template .swastik-copy-badge {
+    margin-top: 4px;
+    font-size: 8px;
+    font-weight: 700;
+    border: 1px solid #000000;
+    padding: 1px 4px;
+    display: inline-block;
+    align-self: flex-start;
+}
+
+.swastik-template .swastik-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-bottom: 1.5px solid #000000;
+    font-size: 9.5px;
+}
+
+.swastik-template .swastik-table th,
+.swastik-template .swastik-table td {
+    border: 1px solid #000000;
+    padding: 5px 8px;
+    color: #000000;
+}
+
+.swastik-template .swastik-table th {
+    background: #ffffff;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 10px;
+    border-top: none;
+}
+
+.swastik-template .swastik-table th:first-child,
+.swastik-template .swastik-table td:first-child {
+    border-left: none;
+}
+
+.swastik-template .swastik-table th:last-child,
+.swastik-template .swastik-table td:last-child {
+    border-right: none;
+}
+
+.swastik-template .swastik-empty-row td {
+    height: 20px;
+}
+
+.swastik-template .swastik-total-row td {
+    border-bottom: none;
+    background: #ffffff;
+}
+
+.swastik-template .swastik-mid-grid {
+    display: flex;
+    border-bottom: 1.5px solid #000000;
+}
+
+.swastik-template .swastik-mid-left {
+    flex: 1.6;
+    padding: 6px 10px;
+    border-right: 1.5px solid #000000;
+    font-size: 9px;
+    line-height: 1.35;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.swastik-template .swastik-mid-right {
+    flex: 1;
+    padding: 0;
+}
+
+.swastik-template .swastik-cheque-note {
+    font-size: 9.5px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #000000;
+}
+
+.swastik-template .swastik-comments-box {
+    padding: 3px 0;
+    border-bottom: 1px solid #000000;
+}
+
+.swastik-template .swastik-amount-payable {
+    font-size: 10px;
+    padding: 3px 0;
+    border-bottom: 1px solid #000000;
+}
+
+.swastik-template .swastik-payable-figure {
+    font-weight: 800;
+    font-size: 11px;
+}
+
+.swastik-template .swastik-amount-words {
+    padding: 3px 0;
+    border-bottom: 1px solid #000000;
+    font-style: italic;
+}
+
+.swastik-template .swastik-satisfaction-clause {
+    font-size: 8.5px;
+    font-weight: 600;
+    padding-top: 2px;
+}
+
+.swastik-template .swastik-tax-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9px;
+    height: 100%;
+}
+
+.swastik-template .swastik-tax-summary-table td {
+    border: 1px solid #000000;
+    padding: 4px 8px;
+    font-weight: 700;
+}
+
+.swastik-template .swastik-tax-summary-table td:first-child {
+    border-left: none;
+}
+
+.swastik-template .swastik-tax-summary-table td:last-child {
+    border-right: none;
+}
+
+.swastik-template .swastik-footer-grid {
+    display: flex;
+    border-bottom: 1.5px solid #000000;
+}
+
+.swastik-template .swastik-bank-box {
+    flex: 1.6;
+    padding: 6px 10px;
+    border-right: 1.5px solid #000000;
+    font-size: 9px;
+    line-height: 1.35;
+}
+
+.swastik-template .swastik-bank-title {
+    font-weight: 800;
+    margin-bottom: 2px;
+}
+
+.swastik-template .swastik-bank-row {
+    margin-bottom: 1px;
+}
+
+.swastik-template .swastik-sign-box {
+    flex: 1;
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+}
+
+.swastik-template .swastik-for-company {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.swastik-template .swastik-sign-area {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 0;
+}
+
+.swastik-template .swastik-signature-img {
+    max-height: 40px;
+    max-width: 110px;
+    object-fit: contain;
+}
+
+.swastik-template .swastik-auth-signatory {
+    font-size: 8.5px;
+    font-weight: 700;
+    border-top: 1px solid #000000;
+    padding-top: 2px;
+    display: inline-block;
+    margin: 0 auto;
+}
+
+.swastik-template .swastik-bottom-banner {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 5px 8px;
+    background: #ffffff;
+    color: #000000;
+}
+
+@media print {
+    .swastik-template {
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 4mm 6mm !important;
+        width: 100% !important;
+    }
+}
+
+
 
 
