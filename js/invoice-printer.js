@@ -1126,37 +1126,80 @@ class InvoicePrinter {
             totalTaxableValue = Number(voucher.taxableAmount) || 0;
         }
 
-        // Company Details with fallback to sample if empty
-        const compName = (company.businessName && company.businessName !== 'My Enterprise') ? company.businessName : 'SWASTIK DYNAMIC PROJECTS PVT. LTD.';
-        const compAddress = company.address ? `${company.address}${company.city ? ', ' + company.city : ''}${company.state ? ', ' + company.state : ''}${company.pincode ? ' - ' + company.pincode : ''}` : 'Plot No. 558 - A, Dwarika City, Chhapraula, Ghaziabad, Uttar Pradesh, PIN - 201009';
+        // Swastik Dynamic Projects Corporate Branding (Permanent and Non-Editable)
+        const compName = 'SWASTIK DYNAMIC PROJECTS PVT. LTD.';
+        const compAddress = (company.address && company.address.toLowerCase().includes('dwarika')) ? `${company.address}${company.city ? ', ' + company.city : ''}${company.state ? ', ' + company.state : ''}${company.pincode ? ' - ' + company.pincode : ''}` : 'Plot No. 558 - A, Dwarika City, Chhapraula, Ghaziabad, Uttar Pradesh, PIN - 201009';
         const compTele = company.phone || '+91 9217916162';
         const compEmail = company.email || 'swastikdynamicprojects@gmail.com';
         const compGstin = company.gstin || '09ABTCS0027Q1ZL';
         const bankName = company.bankDetails?.bankName || 'HDFC BANK';
         const bankAc = company.bankDetails?.accountNumber || '50200118621206';
         const bankIfsc = company.bankDetails?.ifscCode || 'HDFC0005299';
-        const bankHolder = company.bankDetails?.accountName || compName;
+        const bankHolder = compName;
 
         // Ensure minimum 5 rows for authentic look
         const minRows = 5;
         const emptyRowsCount = Math.max(0, minRows - items.length);
 
-        // SVG Compass Logo if no custom logo provided
-        const compassLogoSvg = `
-        <svg width="68" height="68" viewBox="0 0 100 100" class="swastik-compass-logo" style="display:block; flex-shrink:0;">
-            <circle cx="50" cy="50" r="46" fill="none" stroke="#1e3a8a" stroke-width="1.5" stroke-dasharray="2,2"/>
-            <circle cx="50" cy="18" r="7" fill="#1e3a8a"/>
-            <circle cx="50" cy="18" r="4" fill="#ffffff"/>
-            <circle cx="50" cy="18" r="2" fill="#1e3a8a"/>
-            <rect x="47" y="10" width="6" height="6" fill="#1e3a8a" rx="1"/>
-            <path d="M 28 62 A 38 38 0 0 1 72 62" fill="none" stroke="#1e3a8a" stroke-width="3"/>
-            <path d="M 28 62 A 38 38 0 0 1 72 62" fill="none" stroke="#ffffff" stroke-width="1" stroke-dasharray="1.5,2.5"/>
-            <polygon points="46,24 50,24 22,88 18,88" fill="#1e3a8a"/>
-            <polygon points="50,24 54,24 82,88 78,88" fill="#1e3a8a"/>
-            <line x1="28" y1="52" x2="72" y2="52" stroke="#1e3a8a" stroke-width="2"/>
-            <circle cx="50" cy="52" r="5" fill="#1e3a8a"/>
-            <circle cx="50" cy="52" r="2" fill="#ffffff"/>
-            <line x1="12" y1="90" x2="88" y2="90" stroke="#1e3a8a" stroke-width="1" stroke-dasharray="3,3"/>
+        // Permanent, authentic Swastik Dynamic Projects Divider Compass Logo (Non-editable SVG)
+        const swastikPermanentLogoSvg = `
+        <svg width="78" height="78" viewBox="0 0 120 120" class="swastik-compass-logo" style="display:block; flex-shrink:0;">
+            <!-- Outer Technical Calibration Rings -->
+            <circle cx="60" cy="60" r="56" fill="none" stroke="#1e3a8a" stroke-width="1.8"/>
+            <circle cx="60" cy="60" r="52.5" fill="none" stroke="#1e3a8a" stroke-width="0.8" stroke-dasharray="2,2"/>
+            <circle cx="60" cy="60" r="49" fill="none" stroke="#1e3a8a" stroke-width="0.5"/>
+
+            <!-- Cardinal Degree Notches -->
+            <line x1="60" y1="4" x2="60" y2="10" stroke="#1e3a8a" stroke-width="1.5"/>
+            <line x1="60" y1="110" x2="60" y2="116" stroke="#1e3a8a" stroke-width="1.5"/>
+            <line x1="4" y1="60" x2="10" y2="60" stroke="#1e3a8a" stroke-width="1.5"/>
+            <line x1="110" y1="60" x2="116" y2="60" stroke="#1e3a8a" stroke-width="1.5"/>
+            
+            <!-- Top Knurled Handle / Grip -->
+            <rect x="56.5" y="10" width="7" height="9" rx="1.5" fill="#1e3a8a"/>
+            <line x1="57.5" y1="12" x2="62.5" y2="12" stroke="#ffffff" stroke-width="0.8"/>
+            <line x1="57.5" y1="14.5" x2="62.5" y2="14.5" stroke="#ffffff" stroke-width="0.8"/>
+            <line x1="57.5" y1="17" x2="62.5" y2="17" stroke="#ffffff" stroke-width="0.8"/>
+            
+            <!-- Central Pivot Hinge Disc -->
+            <circle cx="60" cy="24" r="9" fill="#1e3a8a"/>
+            <circle cx="60" cy="24" r="6" fill="#ffffff" stroke="#1e3a8a" stroke-width="1.2"/>
+            <circle cx="60" cy="24" r="3" fill="#1e3a8a"/>
+            <circle cx="60" cy="24" r="1" fill="#ffffff"/>
+
+            <!-- Calibrated Measuring Arc / Quadrant (Connecting Compass Legs) -->
+            <path d="M 33 73 A 46 46 0 0 1 87 73" fill="none" stroke="#1e3a8a" stroke-width="4.5" stroke-linecap="round"/>
+            <path d="M 34 73 A 46 46 0 0 1 86 73" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+            <!-- Calibration Tick Marks on Arc -->
+            <path d="M 36 71.5 L 34.5 68.5 M 42 66 L 41 63 M 48 62 L 47.5 59 M 54 59.5 L 54 56.5 M 60 58.5 L 60 55 M 66 59.5 L 66 56.5 M 72 62 L 72.5 59 M 78 66 L 79 63 M 84 71.5 L 85.5 68.5" 
+                  stroke="#1e3a8a" stroke-width="1.2" stroke-linecap="round"/>
+
+            <!-- Left Compass Leg (Tapered Engineering Divider Arm) -->
+            <polygon points="56,31 60,31 29,106 25,106 24,103" fill="#1e3a8a"/>
+            <!-- Left Precision Needle Point -->
+            <polygon points="25,106 24,103 22,111" fill="#1e3a8a"/>
+            <!-- Highlight Line on Left Leg -->
+            <line x1="56.5" y1="33" x2="26.5" y2="103" stroke="#93c5fd" stroke-width="0.8"/>
+
+            <!-- Right Compass Leg (Tapered Engineering Divider Arm) -->
+            <polygon points="60,31 64,31 96,103 95,106 91,106" fill="#1e3a8a"/>
+            <!-- Right Precision Needle Point -->
+            <polygon points="95,106 96,103 98,111" fill="#1e3a8a"/>
+            <!-- Highlight Line on Right Leg -->
+            <line x1="63.5" y1="33" x2="93.5" y2="103" stroke="#93c5fd" stroke-width="0.8"/>
+
+            <!-- Horizontal Threaded Adjustment Spindle -->
+            <line x1="33" y1="62" x2="87" y2="62" stroke="#1e3a8a" stroke-width="2.5"/>
+            <line x1="34" y1="62" x2="86" y2="62" stroke="#ffffff" stroke-width="0.8" stroke-dasharray="1.5,1.5"/>
+            
+            <!-- Central Knurled Thumbwheel / Adjustment Dial -->
+            <rect x="55" y="56" width="10" height="12" rx="2" fill="#1e3a8a" stroke="#ffffff" stroke-width="1"/>
+            <line x1="57.5" y1="57" x2="57.5" y2="67" stroke="#ffffff" stroke-width="0.8"/>
+            <line x1="60" y1="57" x2="60" y2="67" stroke="#ffffff" stroke-width="0.8"/>
+            <line x1="62.5" y1="57" x2="62.5" y2="67" stroke="#ffffff" stroke-width="0.8"/>
+
+            <!-- Baseline Ground / Reference Marks -->
+            <line x1="16" y1="111" x2="104" y2="111" stroke="#1e3a8a" stroke-width="1.2" stroke-dasharray="3,3"/>
         </svg>
         `;
 
@@ -1167,10 +1210,10 @@ class InvoicePrinter {
             
             <!-- Outer Box -->
             <div class="swastik-box">
-                <!-- Company Info Banner -->
+                <!-- Company Info Banner (Permanent Logo & Non-Editable Swastik Dynamics Header) -->
                 <div class="swastik-company-row">
                     <div class="swastik-company-branding">
-                        ${company.logoUrl ? `<img src="${company.logoUrl}" class="swastik-custom-logo" alt="Logo"/>` : compassLogoSvg}
+                        ${swastikPermanentLogoSvg}
                         <div class="swastik-company-text">
                             <h1 class="swastik-comp-name">${compName}</h1>
                             <div class="swastik-comp-meta">
