@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 .npm/
 
@@ -23,6 +23,10 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 desktop.ini
+.vscode/
 
-# Optional: built APKs
+# Built APKs (allow apk/BillFlow.apk)
 *.apk
+!apk/
+!apk/*.apk
+

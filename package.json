@@ -5,6 +5,7 @@
   "main": "sw.js",
   "scripts": {
     "build": "node build_www.js && npx cap copy android",
+    "build:apk": "node build_apk.js",
     "cap:sync": "node build_www.js && npx cap sync android",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

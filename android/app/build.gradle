@@ -52,3 +52,34 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
+
+// Automatically copy latest built APK into project 'apk/' directory and root
+tasks.configureEach { task ->
+    if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
+        task.doLast {
+            def buildType = task.name == 'assembleDebug' ? 'debug' : 'release'
+            def apkFile = file("${buildDir}/outputs/apk/${buildType}/app-${buildType}.apk")
+            if (apkFile.exists()) {
+                def targetApkDir = new File(rootDir.parentFile, "apk")
+                if (!targetApkDir.exists()) {
+                    targetApkDir.mkdirs()
+                }
+                def destApk = new File(targetApkDir, "BillFlow.apk")
+                copy {
+                    from apkFile
+                    into targetApkDir
+                    rename { "BillFlow.apk" }
+                }
+                copy {
+                    from apkFile
+                    into rootDir.parentFile
+                    rename { "BillFlow.apk" }
+                }
+                println "=========================================================="
+                println ">>> [AUTO-COPY] Latest APK successfully placed in: ${destApk.absolutePath}"
+                println "=========================================================="
+            }
+        }
+    }
+}
+
