@@ -76,6 +76,7 @@ class BillFlowMobileApp {
         await this.loadAllState();
         this.bindEvents();
         this.initSignaturePad();
+        this.initExitHandler();
         this.switchScreen('screen-home');
         console.log('BillFlow Mobile Application ready & 100% offline.');
     }
@@ -153,11 +154,58 @@ class BillFlowMobileApp {
 
     async loadAllState() {
         const companies = await window.dbService.getAll('companies');
-        this.company = companies[0] || { id: 'comp_primary', businessName: 'My Enterprise', state: '', invoicePrefix: 'INV-26/' };
+        this.allCompanies = companies || [];
+        const activeCompId = localStorage.getItem('billflow_active_company_id');
+        let activeComp = this.allCompanies.find(c => c.id === activeCompId);
+        if (!activeComp && this.allCompanies.length > 0) {
+            activeComp = this.allCompanies[0];
+            localStorage.setItem('billflow_active_company_id', activeComp.id);
+        }
+
+        this.company = activeComp || { id: 'comp_primary', businessName: 'My Enterprise', state: '', invoicePrefix: 'INV-26/' };
+
+        // Ensure defaults on active company
+        let compDirty = false;
+        if (!Array.isArray(this.company.gstSlabs) || this.company.gstSlabs.length === 0) {
+            this.company.gstSlabs = [0, 3, 5, 12, 18, 28];
+            compDirty = true;
+        }
+        if (!Array.isArray(this.company.termsList) || this.company.termsList.length === 0) {
+            this.company.termsList = [{
+                id: 'tc_std',
+                title: 'Standard B2B',
+                text: this.company.termsAndConditions || '1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be levied if payment not made within due date.\n3. All disputes subject to local jurisdiction.',
+                isDefault: true
+            }];
+            compDirty = true;
+        }
+        if (!Array.isArray(this.company.footerList) || this.company.footerList.length === 0) {
+            this.company.footerList = [{
+                id: 'ft_std',
+                title: 'Standard Thanks',
+                text: this.company.footerText || 'Thank you for your business! Have a great day.',
+                isDefault: true
+            }];
+            compDirty = true;
+        }
+        if (compDirty) {
+            await window.dbService.put('companies', this.company);
+        }
+
+        // Update Top Bar User & Company branding
+        const bName = this.company.businessName || 'Business';
+        document.querySelectorAll('.user-name').forEach(el => {
+            el.textContent = bName;
+        });
+        document.querySelectorAll('.avatar-circle').forEach(el => {
+            el.textContent = bName.trim().charAt(0).toUpperCase() || 'B';
+        });
+
         this.items = await window.dbService.getAll('items');
         this.parties = await window.dbService.getAll('parties');
         this.godowns = await window.dbService.getAll('godowns');
         this.vouchers = await window.dbService.getAll('vouchers');
+        this.skippedSignVoucherIds = this.skippedSignVoucherIds || new Set();
 
         // Self-heal historical parties that got falsely defaulted to 'Maharashtra' or guessed states
         let partiesUpdated = false;
@@ -895,13 +943,16 @@ class BillFlowMobileApp {
         } else if (actualType === 'sales_order') {
             prefix = 'SO-26/';
             title = 'Create Sales Order';
+        } else if (actualType === 'bill_of_supply') {
+            prefix = this.company?.bosPrefix || 'BOS-26/';
+            title = 'Create Bill of Supply';
         }
 
         const idElem = document.getElementById('vform-id');
         if (idElem) idElem.value = voucherToEdit ? voucherToEdit.id : '';
 
         if (voucherToEdit) {
-            title = `Modify ${actualType === 'sales_invoice' ? 'Tax Invoice' : actualType.replace('_', ' ').toUpperCase()} #${voucherToEdit.voucherNo}`;
+            title = `Modify ${actualType === 'sales_invoice' ? 'Tax Invoice' : (actualType === 'bill_of_supply' ? 'Bill of Supply' : actualType.replace('_', ' ').toUpperCase())} #${voucherToEdit.voucherNo}`;
         }
 
         const titleElem = document.getElementById('voucher-modal-title');
@@ -1018,19 +1069,77 @@ class BillFlowMobileApp {
                 : '0.00';
         }
 
-        // Terms & Conditions and Footer Text (per-invoice editable)
+        // Draft signature state
+        this.activeVoucherDraftSignature = voucherToEdit ? (voucherToEdit.signatureUrl || null) : null;
+        const signBtn = document.getElementById('btn-vform-sign');
+        if (signBtn) {
+            if (this.activeVoucherDraftSignature) {
+                signBtn.innerHTML = '<span>✍️</span><span>Signed ✓</span>';
+                signBtn.classList.remove('btn-secondary');
+                signBtn.classList.add('btn-success');
+            } else {
+                signBtn.innerHTML = '<span>✍️</span><span>Sign</span>';
+                signBtn.classList.remove('btn-success');
+                signBtn.classList.add('btn-secondary');
+            }
+        }
+
+        // Terms & Conditions Selector and text (up to 15 presets)
+        const termsSelect = document.getElementById('vform-terms-select');
+        const termsPresets = this.getTermsPresets();
+        if (termsSelect) {
+            termsSelect.innerHTML = '<option value="">-- Choose Terms Preset --</option>';
+            termsPresets.forEach(tp => {
+                const opt = document.createElement('option');
+                opt.value = tp.id;
+                opt.textContent = `${tp.title}${tp.isDefault ? ' (Default)' : ''}`;
+                termsSelect.appendChild(opt);
+            });
+            if (voucherToEdit && voucherToEdit.termsPresetId) {
+                termsSelect.value = voucherToEdit.termsPresetId;
+            } else {
+                const defPreset = termsPresets.find(tp => tp.isDefault);
+                if (defPreset && !voucherToEdit) termsSelect.value = defPreset.id;
+            }
+        }
+
         const vformTerms = document.getElementById('vform-terms');
         if (vformTerms) {
-            vformTerms.value = voucherToEdit
-                ? (voucherToEdit.termsAndConditions !== undefined ? voucherToEdit.termsAndConditions : (this.company?.termsAndConditions || ''))
-                : (this.company?.termsAndConditions || '1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be levied if payment not made within due date.\n3. All disputes subject to local jurisdiction.');
+            if (voucherToEdit && voucherToEdit.termsAndConditions !== undefined) {
+                vformTerms.value = voucherToEdit.termsAndConditions;
+            } else {
+                const defPreset = termsPresets.find(tp => tp.isDefault);
+                vformTerms.value = defPreset ? defPreset.text : (this.company?.termsAndConditions || '1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be levied if payment not made within due date.\n3. All disputes subject to local jurisdiction.');
+            }
+        }
+
+        // Footer Selector and text (up to 15 presets)
+        const footerSelect = document.getElementById('vform-footer-select');
+        const footerPresets = this.getFooterPresets();
+        if (footerSelect) {
+            footerSelect.innerHTML = '<option value="">-- Choose Footer Preset --</option>';
+            footerPresets.forEach(fp => {
+                const opt = document.createElement('option');
+                opt.value = fp.id;
+                opt.textContent = `${fp.title}${fp.isDefault ? ' (Default)' : ''}`;
+                footerSelect.appendChild(opt);
+            });
+            if (voucherToEdit && voucherToEdit.footerPresetId) {
+                footerSelect.value = voucherToEdit.footerPresetId;
+            } else {
+                const defPreset = footerPresets.find(fp => fp.isDefault);
+                if (defPreset && !voucherToEdit) footerSelect.value = defPreset.id;
+            }
         }
 
         const vformFooter = document.getElementById('vform-footer');
         if (vformFooter) {
-            vformFooter.value = voucherToEdit
-                ? (voucherToEdit.footerText !== undefined ? voucherToEdit.footerText : (this.company?.footerText || ''))
-                : (this.company?.footerText || '');
+            if (voucherToEdit && voucherToEdit.footerText !== undefined) {
+                vformFooter.value = voucherToEdit.footerText;
+            } else {
+                const defPreset = footerPresets.find(fp => fp.isDefault);
+                vformFooter.value = defPreset ? defPreset.text : (this.company?.footerText || '');
+            }
         }
 
         // Delete button visibility in voucher modal
@@ -1111,6 +1220,23 @@ class BillFlowMobileApp {
         const taxRate = initialData ? Number(initialData.taxRate || 18) : 18;
         const rowCount = tbody.querySelectorAll('.vform-item-row').length + 1;
 
+        const isBillOfSupply = (document.getElementById('vform-type')?.value === 'bill_of_supply');
+        const gstSlabs = this.getGstSlabs();
+        let slabOptions = '';
+        if (isBillOfSupply) {
+            slabOptions = '<option value="0" selected>0% (Exempt)</option>';
+        } else {
+            let hasSelected = false;
+            gstSlabs.forEach(rate => {
+                const isSel = (rate === taxRate);
+                if (isSel) hasSelected = true;
+                slabOptions += `<option value="${rate}" ${isSel ? 'selected' : ''}>${rate}%</option>`;
+            });
+            if (!hasSelected && taxRate !== undefined && taxRate !== null) {
+                slabOptions += `<option value="${taxRate}" selected>${taxRate}% (Historical)</option>`;
+            }
+        }
+
         tr.innerHTML = `
             <td class="col-item-desc" data-label="Item Description">
                 <div class="item-card-row-header">
@@ -1149,12 +1275,8 @@ class BillFlowMobileApp {
             </td>
             <td class="col-item-tax" data-label="GST %">
                 <label class="col-label">GST %</label>
-                <select class="form-control vrow-tax-rate" onchange="window.app.updateVoucherCalculations()">
-                    <option value="0" ${taxRate === 0 ? 'selected' : ''}>0%</option>
-                    <option value="5" ${taxRate === 5 ? 'selected' : ''}>5%</option>
-                    <option value="12" ${taxRate === 12 ? 'selected' : ''}>12%</option>
-                    <option value="18" ${taxRate === 18 ? 'selected' : ''}>18%</option>
-                    <option value="28" ${taxRate === 28 ? 'selected' : ''}>28%</option>
+                <select class="form-control vrow-tax-rate" onchange="window.app.updateVoucherCalculations()" ${isBillOfSupply ? 'disabled' : ''}>
+                    ${slabOptions}
                 </select>
             </td>
             <td class="col-item-total" data-label="Total (₹)">
@@ -1236,6 +1358,7 @@ class BillFlowMobileApp {
         const compState = this.company?.state || '';
         const placeOfSupply = document.getElementById('vform-place-of-supply')?.value?.trim() || compState;
         const taxType = InvoiceEngine.determineTaxType(compState, placeOfSupply);
+        const isBillOfSupply = (document.getElementById('vform-type')?.value === 'bill_of_supply');
 
         const rows = document.querySelectorAll('.vform-item-row');
         let subtotal = 0;
@@ -1247,7 +1370,14 @@ class BillFlowMobileApp {
             const qty = Number(row.querySelector('.vrow-qty')?.value) || 0;
             const price = Number(row.querySelector('.vrow-price')?.value) || 0;
             const disc = Number(row.querySelector('.vrow-disc')?.value) || 0;
-            const taxRate = Number(row.querySelector('.vrow-tax-rate')?.value) || 0;
+            const taxSelect = row.querySelector('.vrow-tax-rate');
+            if (isBillOfSupply && taxSelect) {
+                taxSelect.value = '0';
+                taxSelect.disabled = true;
+            } else if (taxSelect && taxSelect.disabled) {
+                taxSelect.disabled = false;
+            }
+            const taxRate = isBillOfSupply ? 0 : (Number(taxSelect?.value) || 0);
 
             const line = InvoiceEngine.calculateItemTotals({ qty, price, discountPercent: disc, taxRate }, taxType);
             const totalCell = row.querySelector('.vrow-total-amt');
@@ -1262,14 +1392,21 @@ class BillFlowMobileApp {
         // Transporter / Freight Charges
         const hasTransporter = document.getElementById('vform-has-transporter')?.checked || false;
         const transCost = hasTransporter ? (Number(document.getElementById('vform-transporter-cost')?.value) || 0) : 0;
-        const transGstRate = hasTransporter ? (Number(document.getElementById('vform-transporter-gst')?.value) || 0) : 0;
+        const transGstSelect = document.getElementById('vform-transporter-gst');
+        if (isBillOfSupply && transGstSelect) {
+            transGstSelect.value = '0';
+            transGstSelect.disabled = true;
+        } else if (transGstSelect && transGstSelect.disabled) {
+            transGstSelect.disabled = false;
+        }
+        const transGstRate = (hasTransporter && !isBillOfSupply) ? (Number(transGstSelect?.value) || 0) : 0;
 
         let transTax = 0;
         let transCgst = 0;
         let transSgst = 0;
         let transIgst = 0;
 
-        if (transCost > 0 && transGstRate > 0) {
+        if (!isBillOfSupply && transCost > 0 && transGstRate > 0) {
             transTax = (transCost * transGstRate) / 100;
             if (taxType === 'intra') {
                 transCgst = transTax / 2;
@@ -1305,10 +1442,10 @@ class BillFlowMobileApp {
         }
 
         const totalTaxable = subtotal + transCost;
-        const finalCgst = totalCgst + transCgst;
-        const finalSgst = totalSgst + transSgst;
-        const finalIgst = totalIgst + transIgst;
-        const finalTotalTax = finalCgst + finalSgst + finalIgst;
+        const finalCgst = isBillOfSupply ? 0 : (totalCgst + transCgst);
+        const finalSgst = isBillOfSupply ? 0 : (totalSgst + transSgst);
+        const finalIgst = isBillOfSupply ? 0 : (totalIgst + transIgst);
+        const finalTotalTax = isBillOfSupply ? 0 : (finalCgst + finalSgst + finalIgst);
 
         const rawGrand = totalTaxable + finalTotalTax;
         const roundedGrand = Math.round(rawGrand);
@@ -1327,7 +1464,10 @@ class BillFlowMobileApp {
         const cgstRow = document.getElementById('vcalc-cgst-sgst-row');
         const igstRow = document.getElementById('vcalc-igst-row');
 
-        if (taxType === 'intra') {
+        if (isBillOfSupply) {
+            if (cgstRow) cgstRow.style.display = 'none';
+            if (igstRow) igstRow.style.display = 'none';
+        } else if (taxType === 'intra') {
             if (cgstRow) cgstRow.style.display = 'flex';
             if (igstRow) igstRow.style.display = 'none';
             if (cgstEl) cgstEl.textContent = InvoiceEngine.formatCurrency(finalCgst + finalSgst);
@@ -1361,7 +1501,7 @@ class BillFlowMobileApp {
 
         // If modifying existing voucher, revert its previous stock impact first
         if (existingVoucher) {
-            if (existingVoucher.voucherType === 'sales_invoice') {
+            if (existingVoucher.voucherType === 'sales_invoice' || existingVoucher.voucherType === 'bill_of_supply') {
                 for (const oldLine of (existingVoucher.items || [])) {
                     if (oldLine.itemId) {
                         const itm = this.items.find(i => i.id === oldLine.itemId);
@@ -1386,7 +1526,7 @@ class BillFlowMobileApp {
             // Revert previous party balance
             const oldParty = this.parties.find(p => p.id === existingVoucher.partyId);
             if (oldParty && oldParty.id !== 'cash_sale') {
-                if (existingVoucher.voucherType === 'sales_invoice') {
+                if (existingVoucher.voucherType === 'sales_invoice' || existingVoucher.voucherType === 'bill_of_supply') {
                     oldParty.currentBalance = (oldParty.currentBalance || 0) - Number(existingVoucher.balanceDue || 0);
                     await window.dbService.put('parties', oldParty);
                 } else if (existingVoucher.voucherType === 'purchase_invoice') {
@@ -1481,34 +1621,39 @@ class BillFlowMobileApp {
             vehicleNo: transporterLr,
             transporterCost: totals.transporterCost,
             transporterGstRate: totals.transporterGstRate,
-            transporterTax: totals.transporterTax,
-            transporterCgst: totals.transporterCgst,
-            transporterSgst: totals.transporterSgst,
-            transporterIgst: totals.transporterIgst,
+            transporterTax: voucherType === 'bill_of_supply' ? 0 : totals.transporterTax,
+            transporterCgst: voucherType === 'bill_of_supply' ? 0 : totals.transporterCgst,
+            transporterSgst: voucherType === 'bill_of_supply' ? 0 : totals.transporterSgst,
+            transporterIgst: voucherType === 'bill_of_supply' ? 0 : totals.transporterIgst,
             placeOfSupply,
             taxType,
             godownId,
             items: totals.items,
             subtotal: totals.subtotal,
             taxableTotal: totals.taxableTotal,
-            cgst: totals.cgst,
-            sgst: totals.sgst,
-            igst: totals.igst,
-            totalTax: totals.totalTax,
+            cgst: voucherType === 'bill_of_supply' ? 0 : totals.cgst,
+            sgst: voucherType === 'bill_of_supply' ? 0 : totals.sgst,
+            igst: voucherType === 'bill_of_supply' ? 0 : totals.igst,
+            totalTax: voucherType === 'bill_of_supply' ? 0 : totals.totalTax,
             roundOff: totals.roundOff,
             grandTotal: totals.grandTotal,
             paidAmount,
             balanceDue,
             paymentStatus,
+            termsPresetId: document.getElementById('vform-terms-select')?.value || '',
+            footerPresetId: document.getElementById('vform-footer-select')?.value || '',
             termsAndConditions,
-            footerText
+            footerText,
+            signatureUrl: (this.activeVoucherDraftSignature !== null && this.activeVoucherDraftSignature !== undefined)
+                ? this.activeVoucherDraftSignature
+                : (existingVoucher?.signatureUrl || null)
         };
 
         // 1. Save voucher to offline IndexedDB
         await window.dbService.put('vouchers', voucher);
 
         // 2. Adjust stock
-        if (voucher.voucherType === 'sales_invoice') {
+        if (voucher.voucherType === 'sales_invoice' || voucher.voucherType === 'bill_of_supply') {
             for (const line of items) {
                 if (line.itemId) {
                     const itm = this.items.find(i => i.id === line.itemId);
@@ -1532,7 +1677,7 @@ class BillFlowMobileApp {
 
         // 3. Update party balance
         if (party && party.id !== 'cash_sale') {
-            if (voucher.voucherType === 'sales_invoice') {
+            if (voucher.voucherType === 'sales_invoice' || voucher.voucherType === 'bill_of_supply') {
                 party.currentBalance = (party.currentBalance || 0) + balanceDue;
                 await window.dbService.put('parties', party);
             } else if (voucher.voucherType === 'purchase_invoice') {
@@ -1713,11 +1858,21 @@ class BillFlowMobileApp {
     // ==========================================
     // PRINT & PREVIEW MODAL
     // ==========================================
-    openPrintModal(voucherId) {
+    openPrintModal(voucherId, allowPrompt = true) {
         const voucher = this.vouchers.find(v => v.id === voucherId);
         if (!voucher) return;
 
         this.activeVoucherForPrint = voucher;
+
+        // Prompt to add signature before Print Preview if not yet added
+        if (allowPrompt && !voucher.signatureUrl && (!this.skippedSignVoucherIds || !this.skippedSignVoucherIds.has(voucher.id))) {
+            const promptModal = document.getElementById('modal-sign-prompt');
+            if (promptModal) {
+                promptModal.classList.add('active');
+                return;
+            }
+        }
+
         const party = this.parties.find(p => p.id === voucher.partyId);
 
         const selector = document.getElementById('print-template-selector');
@@ -2294,120 +2449,737 @@ class BillFlowMobileApp {
     }
 
     // ==========================================
-    // TERMS & CONDITIONS MANAGEMENT
+    // TERMS & CONDITIONS PRESETS (Up to 15 Presets - Points 2 & 4)
     // ==========================================
-    openTermsModal() {
-        const textarea = document.getElementById('terms-textarea');
-        if (textarea) {
-            textarea.value = (this.activeVoucherForPrint && this.activeVoucherForPrint.termsAndConditions !== undefined)
-                ? this.activeVoucherForPrint.termsAndConditions
-                : (this.company?.termsAndConditions || 
-                    '1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be charged if payment not made within due date.\n3. All disputes subject to local jurisdiction.');
+    getTermsPresets() {
+        if (!this.company) this.company = { id: 'comp_primary' };
+        if (!Array.isArray(this.company.termsList) || this.company.termsList.length === 0) {
+            this.company.termsList = [{
+                id: 'tc_std',
+                title: 'Standard B2B',
+                text: this.company.termsAndConditions || '1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be levied if payment not made within due date.\n3. All disputes subject to local jurisdiction.',
+                isDefault: true
+            }];
         }
+        return this.company.termsList;
+    }
+
+    openTermsModal() {
+        this.renderTermsPresetsList();
+        this.resetTermsForm();
         document.getElementById('terms-conditions-modal')?.classList.add('active');
     }
 
-    async saveTermsModal() {
-        const textarea = document.getElementById('terms-textarea');
-        if (!textarea) return;
-        const newTerms = textarea.value.trim();
-        if (!this.company) this.company = {};
-        this.company.termsAndConditions = newTerms;
+    renderTermsPresetsList() {
+        const list = this.getTermsPresets();
+        const container = document.getElementById('tc-presets-list');
+        const badge = document.getElementById('tc-presets-count-badge');
+        if (badge) badge.textContent = `${list.length} / 15`;
 
-        // Persist to IndexedDB
+        if (!container) return;
+        if (list.length === 0) {
+            container.innerHTML = '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:12px;">No terms presets found. Add your first preset below.</div>';
+            return;
+        }
+
+        container.innerHTML = list.map(item => `
+            <div style="background:var(--bg-main, #151922); border:1px solid ${item.isDefault ? '#2563eb' : 'var(--border-color, #28303f)'}; border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-weight:700; font-size:12.5px; color:#f1f5f9;">${item.title}</span>
+                        ${item.isDefault ? '<span style="background:#2563eb; color:#fff; font-size:9.5px; font-weight:800; padding:1px 6px; border-radius:4px;">DEFAULT</span>' : ''}
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        ${!item.isDefault ? `<button type="button" class="btn btn-xs btn-outline-primary" style="font-size:10px; padding:2px 6px;" onclick="window.app.setDefaultTermsPreset('${item.id}')">Make Default</button>` : ''}
+                        <button type="button" class="btn btn-xs btn-secondary" style="font-size:10px; padding:2px 6px;" onclick="window.app.editTermsPreset('${item.id}')">Edit</button>
+                        ${list.length > 1 ? `<button type="button" class="btn btn-xs btn-danger" style="font-size:10px; padding:2px 6px; background:#ef4444; color:#fff;" onclick="window.app.deleteTermsPreset('${item.id}')">×</button>` : ''}
+                    </div>
+                </div>
+                <div style="font-size:11px; color:#94a3b8; white-space:pre-wrap; line-height:1.3; max-height:48px; overflow:hidden; text-overflow:ellipsis;">${item.text}</div>
+            </div>
+        `).join('');
+    }
+
+    editTermsPreset(id) {
+        const item = this.getTermsPresets().find(x => x.id === id);
+        if (!item) return;
+        document.getElementById('tc-form-edit-id').value = item.id;
+        document.getElementById('tc-form-name').value = item.title;
+        document.getElementById('tc-form-text').value = item.text;
+        document.getElementById('tc-form-is-default').checked = !!item.isDefault;
+        const titleEl = document.getElementById('tc-form-title');
+        if (titleEl) titleEl.textContent = '✏️ Edit Terms Preset';
+        document.getElementById('tc-form-name')?.focus();
+    }
+
+    resetTermsForm() {
+        const editId = document.getElementById('tc-form-edit-id');
+        if (editId) editId.value = '';
+        const nameIn = document.getElementById('tc-form-name');
+        if (nameIn) nameIn.value = '';
+        const textIn = document.getElementById('tc-form-text');
+        if (textIn) textIn.value = '';
+        const isDef = document.getElementById('tc-form-is-default');
+        if (isDef) isDef.checked = false;
+        const titleEl = document.getElementById('tc-form-title');
+        if (titleEl) titleEl.textContent = '➕ Add Terms Preset';
+    }
+
+    async saveTermsPreset() {
+        const editId = document.getElementById('tc-form-edit-id')?.value?.trim();
+        const title = document.getElementById('tc-form-name')?.value?.trim();
+        const text = document.getElementById('tc-form-text')?.value?.trim();
+        const isDefault = document.getElementById('tc-form-is-default')?.checked || false;
+
+        if (!title) {
+            alert('Please enter a preset title (e.g. Standard B2B).');
+            return;
+        }
+        if (!text) {
+            alert('Please enter the terms & conditions text.');
+            return;
+        }
+
+        const list = this.getTermsPresets();
+        if (!editId && list.length >= 15) {
+            alert('Maximum limit reached: You can store up to 15 terms presets.');
+            return;
+        }
+
+        if (isDefault) {
+            list.forEach(p => p.isDefault = false);
+        }
+
+        if (editId) {
+            const idx = list.findIndex(p => p.id === editId);
+            if (idx >= 0) {
+                list[idx].title = title;
+                list[idx].text = text;
+                if (isDefault) list[idx].isDefault = true;
+            }
+        } else {
+            const newPreset = {
+                id: 'tc_' + Date.now(),
+                title,
+                text,
+                isDefault: isDefault || list.length === 0
+            };
+            list.push(newPreset);
+        }
+
+        const defItem = list.find(p => p.isDefault) || list[0];
+        if (defItem) {
+            this.company.termsAndConditions = defItem.text;
+        }
+        this.company.termsList = list;
         await window.dbService.put('companies', this.company);
 
-        // Sync with doc-settings modal textarea if present
-        const docTerms = document.getElementById('doc-terms');
-        if (docTerms) docTerms.value = newTerms;
-
-        // Sync with voucher form if open
-        const vformTerms = document.getElementById('vform-terms');
-        if (vformTerms) vformTerms.value = newTerms;
-
-        // Immediately update voucher and preview if print modal is currently open
-        if (this.activeVoucherForPrint) {
-            this.activeVoucherForPrint.termsAndConditions = newTerms;
-            await window.dbService.put('vouchers', this.activeVoucherForPrint);
-            const party = this.parties.find(p => p.id === this.activeVoucherForPrint.partyId);
-            this.renderPrintDocument(this.activeVoucherForPrint, this.company, party);
-        }
-
-        document.getElementById('terms-conditions-modal')?.classList.remove('active');
-        this.showToast('Terms & conditions saved successfully!', 'success');
+        this.renderTermsPresetsList();
+        this.resetTermsForm();
+        this.showToast('Terms preset saved successfully!', 'success');
     }
 
-    applyTermsPreset(presetKey) {
-        const textarea = document.getElementById('terms-textarea');
-        if (!textarea) return;
-        const presets = {
-            standard: '1. Goods once sold will not be taken back or exchanged.\n2. Payment terms: 30 days net from invoice date.\n3. Interest @ 18% p.a. will be levied on overdue payments.\n4. All disputes are subject to local jurisdiction only.',
-            international: '1. Goods sold under International Commercial Terms (Incoterms 2020).\n2. Wire transfer / remittance charges to be borne by remitter.\n3. Any discrepancies must be notified within 7 days of arrival.\n4. Payment terms: Clean documents against payment (D/P) or net 30 days.',
-            services: '1. Invoices are payable upon receipt or milestone completion.\n2. Intellectual property transfers upon receipt of full settlement.\n3. Service warranty valid for 30 days from sign-off.\n4. All disputes subject to arbitration under local jurisdiction.',
-            retail: '1. Goods once sold will not be returned.\n2. Exchange permitted within 7 days with original invoice copy.\n3. Warranty coverage as per manufacturer policy only.\n4. E. & O.E. (Errors and Omissions Excepted).'
-        };
-        if (presets[presetKey]) {
-            textarea.value = presets[presetKey];
-            this.showToast(`Applied ${presetKey} terms preset`, 'info');
+    async setDefaultTermsPreset(id) {
+        const list = this.getTermsPresets();
+        const target = list.find(x => x.id === id);
+        if (!target) return;
+
+        list.forEach(p => p.isDefault = (p.id === id));
+        this.company.termsAndConditions = target.text;
+        this.company.termsList = list;
+        await window.dbService.put('companies', this.company);
+
+        this.renderTermsPresetsList();
+        this.showToast(`"${target.title}" set as default terms.`, 'success');
+    }
+
+    async deleteTermsPreset(id) {
+        const list = this.getTermsPresets();
+        if (list.length <= 1) {
+            alert('You must have at least one terms preset.');
+            return;
         }
+        const item = list.find(x => x.id === id);
+        if (!item) return;
+        if (!confirm(`Delete terms preset "${item.title}"?`)) return;
+
+        const filtered = list.filter(x => x.id !== id);
+        if (item.isDefault && filtered.length > 0) {
+            filtered[0].isDefault = true;
+            this.company.termsAndConditions = filtered[0].text;
+        }
+        this.company.termsList = filtered;
+        await window.dbService.put('companies', this.company);
+
+        this.renderTermsPresetsList();
+        this.resetTermsForm();
+        this.showToast('Terms preset deleted.', 'info');
     }
 
     // ==========================================
-    // INVOICE FOOTER MANAGEMENT
+    // INVOICE FOOTER PRESETS (Up to 15 Presets - Points 3 & 5)
     // ==========================================
+    getFooterPresets() {
+        if (!this.company) this.company = { id: 'comp_primary' };
+        if (!Array.isArray(this.company.footerList) || this.company.footerList.length === 0) {
+            this.company.footerList = [{
+                id: 'ft_std',
+                title: 'Standard Thanks',
+                text: this.company.footerText || 'Thank you for your business! Have a great day.',
+                isDefault: true
+            }];
+        }
+        return this.company.footerList;
+    }
+
     openFooterModal() {
-        const textarea = document.getElementById('footer-textarea');
-        const defaultCheck = document.getElementById('footer-set-default');
-        const currentFooter = this.activeVoucherForPrint
-            ? (this.activeVoucherForPrint.footerText !== undefined ? this.activeVoucherForPrint.footerText : (this.company?.footerText || ''))
-            : (this.company?.footerText || '');
-        if (textarea) textarea.value = currentFooter;
-        if (defaultCheck) defaultCheck.checked = false;
+        this.renderFooterPresetsList();
+        this.resetFooterForm();
         document.getElementById('footer-modal')?.classList.add('active');
     }
 
-    applyFooterPreset(presetKey) {
-        const textarea = document.getElementById('footer-textarea');
-        if (!textarea) return;
-        const presets = {
-            blank: '',
-            thanks: 'Thank you for your business! We appreciate your partnership.',
-            jurisdiction: 'All disputes are subject to local jurisdiction only.',
-            computer: 'This is a computer generated invoice and requires no physical signature.',
-            eoe: 'Errors and Omissions Excepted (E.&O.E.).'
+    renderFooterPresetsList() {
+        const list = this.getFooterPresets();
+        const container = document.getElementById('footer-presets-list');
+        const badge = document.getElementById('footer-presets-count-badge');
+        if (badge) badge.textContent = `${list.length} / 15`;
+
+        if (!container) return;
+        if (list.length === 0) {
+            container.innerHTML = '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:12px;">No footer presets found. Add your first preset below.</div>';
+            return;
+        }
+
+        container.innerHTML = list.map(item => `
+            <div style="background:var(--bg-main, #151922); border:1px solid ${item.isDefault ? '#8b5cf6' : 'var(--border-color, #28303f)'}; border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-weight:700; font-size:12.5px; color:#f1f5f9;">${item.title}</span>
+                        ${item.isDefault ? '<span style="background:#8b5cf6; color:#fff; font-size:9.5px; font-weight:800; padding:1px 6px; border-radius:4px;">DEFAULT</span>' : ''}
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        ${!item.isDefault ? `<button type="button" class="btn btn-xs btn-outline-primary" style="font-size:10px; padding:2px 6px;" onclick="window.app.setDefaultFooterPreset('${item.id}')">Make Default</button>` : ''}
+                        <button type="button" class="btn btn-xs btn-secondary" style="font-size:10px; padding:2px 6px;" onclick="window.app.editFooterPreset('${item.id}')">Edit</button>
+                        ${list.length > 1 ? `<button type="button" class="btn btn-xs btn-danger" style="font-size:10px; padding:2px 6px; background:#ef4444; color:#fff;" onclick="window.app.deleteFooterPreset('${item.id}')">×</button>` : ''}
+                    </div>
+                </div>
+                <div style="font-size:11px; color:#94a3b8; white-space:pre-wrap; line-height:1.3; max-height:48px; overflow:hidden; text-overflow:ellipsis;">${item.text}</div>
+            </div>
+        `).join('');
+    }
+
+    editFooterPreset(id) {
+        const item = this.getFooterPresets().find(x => x.id === id);
+        if (!item) return;
+        document.getElementById('footer-form-edit-id').value = item.id;
+        document.getElementById('footer-form-name').value = item.title;
+        document.getElementById('footer-form-text').value = item.text;
+        document.getElementById('footer-form-is-default').checked = !!item.isDefault;
+        const titleEl = document.getElementById('footer-form-title');
+        if (titleEl) titleEl.textContent = '✏️ Edit Footer Preset';
+        document.getElementById('footer-form-name')?.focus();
+    }
+
+    resetFooterForm() {
+        const editId = document.getElementById('footer-form-edit-id');
+        if (editId) editId.value = '';
+        const nameIn = document.getElementById('footer-form-name');
+        if (nameIn) nameIn.value = '';
+        const textIn = document.getElementById('footer-form-text');
+        if (textIn) textIn.value = '';
+        const isDef = document.getElementById('footer-form-is-default');
+        if (isDef) isDef.checked = false;
+        const titleEl = document.getElementById('footer-form-title');
+        if (titleEl) titleEl.textContent = '➕ Add Footer Preset';
+    }
+
+    async saveFooterPreset() {
+        const editId = document.getElementById('footer-form-edit-id')?.value?.trim();
+        const title = document.getElementById('footer-form-name')?.value?.trim();
+        const text = document.getElementById('footer-form-text')?.value?.trim();
+        const isDefault = document.getElementById('footer-form-is-default')?.checked || false;
+
+        if (!title) {
+            alert('Please enter a preset title (e.g. Standard Thanks).');
+            return;
+        }
+        if (!text) {
+            alert('Please enter footer text.');
+            return;
+        }
+
+        const list = this.getFooterPresets();
+        if (!editId && list.length >= 15) {
+            alert('Maximum limit reached: You can store up to 15 footer presets.');
+            return;
+        }
+
+        if (isDefault) {
+            list.forEach(p => p.isDefault = false);
+        }
+
+        if (editId) {
+            const idx = list.findIndex(p => p.id === editId);
+            if (idx >= 0) {
+                list[idx].title = title;
+                list[idx].text = text;
+                if (isDefault) list[idx].isDefault = true;
+            }
+        } else {
+            const newPreset = {
+                id: 'ft_' + Date.now(),
+                title,
+                text,
+                isDefault: isDefault || list.length === 0
+            };
+            list.push(newPreset);
+        }
+
+        const defItem = list.find(p => p.isDefault) || list[0];
+        if (defItem) {
+            this.company.footerText = defItem.text;
+        }
+        this.company.footerList = list;
+        await window.dbService.put('companies', this.company);
+
+        this.renderFooterPresetsList();
+        this.resetFooterForm();
+        this.showToast('Footer preset saved successfully!', 'success');
+    }
+
+    async setDefaultFooterPreset(id) {
+        const list = this.getFooterPresets();
+        const target = list.find(x => x.id === id);
+        if (!target) return;
+
+        list.forEach(p => p.isDefault = (p.id === id));
+        this.company.footerText = target.text;
+        this.company.footerList = list;
+        await window.dbService.put('companies', this.company);
+
+        this.renderFooterPresetsList();
+        this.showToast(`"${target.title}" set as default footer.`, 'success');
+    }
+
+    async deleteFooterPreset(id) {
+        const list = this.getFooterPresets();
+        if (list.length <= 1) {
+            alert('You must have at least one footer preset.');
+            return;
+        }
+        const item = list.find(x => x.id === id);
+        if (!item) return;
+        if (!confirm(`Delete footer preset "${item.title}"?`)) return;
+
+        const filtered = list.filter(x => x.id !== id);
+        if (item.isDefault && filtered.length > 0) {
+            filtered[0].isDefault = true;
+            this.company.footerText = filtered[0].text;
+        }
+        this.company.footerList = filtered;
+        await window.dbService.put('companies', this.company);
+
+        this.renderFooterPresetsList();
+        this.resetFooterForm();
+        this.showToast('Footer preset deleted.', 'info');
+    }
+
+    // ==========================================
+    // GST RATES & TAX SLABS (Point 1)
+    // ==========================================
+    getGstSlabs() {
+        if (!this.company) this.company = { id: 'comp_primary' };
+        if (!Array.isArray(this.company.gstSlabs) || this.company.gstSlabs.length === 0) {
+            this.company.gstSlabs = [0, 3, 5, 12, 18, 28];
+        }
+        return [...this.company.gstSlabs].sort((a, b) => a - b);
+    }
+
+    openGstSlabsModal() {
+        this.renderGstSlabsList();
+        document.getElementById('gst-slabs-modal')?.classList.add('active');
+    }
+
+    renderGstSlabsList() {
+        const slabs = this.getGstSlabs();
+        const container = document.getElementById('gst-slabs-list-container');
+        if (!container) return;
+
+        container.innerHTML = slabs.map(rate => `
+            <div style="background:var(--bg-main, #151922); border:1px solid var(--border-color, #28303f); border-radius:20px; padding:6px 12px; display:inline-flex; align-items:center; gap:8px;">
+                <span style="font-weight:800; font-size:13px; color:#10b981;">${rate}%</span>
+                ${rate > 0 ? `<button type="button" style="background:none; border:none; color:#ef4444; font-size:14px; cursor:pointer; padding:0; line-height:1;" title="Delete Slab" onclick="window.app.deleteGstSlab(${rate})">&times;</button>` : ''}
+            </div>
+        `).join('');
+    }
+
+    async addGstSlab() {
+        const input = document.getElementById('new-gst-slab-rate');
+        const rate = parseFloat(input?.value);
+        if (isNaN(rate) || rate < 0 || rate > 100) {
+            alert('Please enter a valid GST % rate between 0 and 100.');
+            return;
+        }
+
+        const slabs = this.getGstSlabs();
+        if (slabs.includes(rate)) {
+            alert(`GST Slab ${rate}% already exists!`);
+            return;
+        }
+
+        slabs.push(rate);
+        slabs.sort((a, b) => a - b);
+        this.company.gstSlabs = slabs;
+        await window.dbService.put('companies', this.company);
+
+        if (input) input.value = '';
+        this.renderGstSlabsList();
+        this.showToast(`GST slab ${rate}% added successfully!`, 'success');
+    }
+
+    async deleteGstSlab(rate) {
+        if (rate === 0) {
+            alert('0% GST slab cannot be deleted.');
+            return;
+        }
+        if (!confirm(`Delete GST ${rate}% slab? (Existing saved invoices with ${rate}% will NOT be affected)`)) {
+            return;
+        }
+
+        const slabs = this.getGstSlabs().filter(r => r !== rate);
+        this.company.gstSlabs = slabs;
+        await window.dbService.put('companies', this.company);
+
+        this.renderGstSlabsList();
+        this.showToast(`GST slab ${rate}% removed.`, 'info');
+    }
+
+    // ==========================================
+    // QUICK ADD PRODUCT ON-THE-FLY (Point 6)
+    // ==========================================
+    openQuickAddProductModal() {
+        const form = document.getElementById('quick-add-product-form');
+        if (form) form.reset();
+
+        const taxSelect = document.getElementById('quick-prod-tax-rate');
+        if (taxSelect) {
+            const slabs = this.getGstSlabs();
+            taxSelect.innerHTML = slabs.map(rate => `
+                <option value="${rate}" ${rate === 18 ? 'selected' : ''}>${rate}%</option>
+            `).join('');
+        }
+
+        document.getElementById('modal-quick-add-product')?.classList.add('active');
+        setTimeout(() => document.getElementById('quick-prod-name')?.focus(), 150);
+    }
+
+    async saveQuickProduct() {
+        const nameInput = document.getElementById('quick-prod-name');
+        const name = nameInput?.value?.trim();
+        const price = parseFloat(document.getElementById('quick-prod-price')?.value);
+
+        if (!name) {
+            alert('Please enter product / item name.');
+            nameInput?.focus();
+            return;
+        }
+        if (isNaN(price) || price < 0) {
+            alert('Please enter a valid sale price.');
+            document.getElementById('quick-prod-price')?.focus();
+            return;
+        }
+
+        const hsn = document.getElementById('quick-prod-hsn')?.value?.trim() || '8544';
+        const unit = document.getElementById('quick-prod-unit')?.value || 'PCS';
+        const taxRate = parseFloat(document.getElementById('quick-prod-tax-rate')?.value) || 0;
+        const purchasePrice = parseFloat(document.getElementById('quick-prod-pur-price')?.value) || 0;
+        const stock = parseFloat(document.getElementById('quick-prod-stock')?.value) || 0;
+
+        const newItem = {
+            id: 'item_' + Date.now(),
+            name,
+            hsn,
+            unit,
+            wholesalePrice: price,
+            retailPrice: price,
+            purchasePrice,
+            taxRate,
+            currentStock: stock,
+            createdAt: new Date().toISOString()
         };
-        if (presets[presetKey] !== undefined) {
-            textarea.value = presets[presetKey];
-            this.showToast(presets[presetKey] ? `Applied ${presetKey} footer preset` : 'Cleared footer text', 'info');
+
+        await window.dbService.put('items', newItem);
+        this.items.push(newItem);
+
+        // Add row directly to open invoice form without resetting any form fields!
+        this.addItemRowToVoucher({
+            itemId: newItem.id,
+            name: newItem.name,
+            hsn: newItem.hsn,
+            price: newItem.wholesalePrice,
+            taxRate: newItem.taxRate,
+            qty: 1,
+            discountPercent: 0
+        });
+        this.updateVoucherCalculations();
+
+        document.getElementById('modal-quick-add-product')?.classList.remove('active');
+        this.showToast(`"${newItem.name}" added to invoice & products inventory!`, 'success');
+    }
+
+    // ==========================================
+    // MULTIPLE BUSINESS PROFILES (Point 10)
+    // ==========================================
+    openBusinessProfilesModal() {
+        this.renderBusinessProfilesList();
+        document.getElementById('modal-business-profiles')?.classList.add('active');
+    }
+
+    renderBusinessProfilesList() {
+        const container = document.getElementById('business-profiles-list');
+        if (!container) return;
+
+        const activeId = this.company?.id;
+        const list = this.allCompanies || [];
+
+        container.innerHTML = list.map(comp => {
+            const isActive = comp.id === activeId;
+            return `
+                <div style="background:var(--bg-main, #151922); border:1px solid ${isActive ? '#10b981' : 'var(--border-color, #28303f)'}; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:38px; height:38px; border-radius:50%; background:${isActive ? '#10b981' : '#334155'}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px;">
+                            ${(comp.businessName || 'B').trim().charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span style="font-weight:700; font-size:13px; color:#f1f5f9;">${comp.businessName || 'Unnamed Business'}</span>
+                                ${isActive ? '<span style="background:rgba(16,185,129,0.2); color:#10b981; font-size:9.5px; font-weight:800; padding:1px 6px; border-radius:4px;">ACTIVE</span>' : ''}
+                            </div>
+                            <div style="font-size:11px; color:#94a3b8;">
+                                ${comp.gstin ? `GSTIN: ${comp.gstin}` : 'Non-GST'} | ${comp.state || comp.city || 'No Location'}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        ${!isActive ? `<button type="button" class="btn btn-sm btn-outline-primary" style="font-size:11px; padding:4px 8px;" onclick="window.app.switchBusinessProfile('${comp.id}')">Switch</button>` : ''}
+                        <button type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:4px 8px;" onclick="window.app.editBusinessProfile('${comp.id}')">Edit</button>
+                        ${list.length > 1 && !isActive ? `<button type="button" class="btn btn-sm btn-danger" style="font-size:11px; padding:4px 8px; background:#ef4444; color:#fff;" onclick="window.app.deleteBusinessProfile('${comp.id}')">×</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async switchBusinessProfile(id) {
+        const target = this.allCompanies.find(c => c.id === id);
+        if (!target) return;
+
+        localStorage.setItem('billflow_active_company_id', id);
+        this.company = target;
+
+        // Update Top Bar User & Company branding
+        const bName = this.company.businessName || 'Business';
+        document.querySelectorAll('.user-name').forEach(el => el.textContent = bName);
+        document.querySelectorAll('.avatar-circle').forEach(el => el.textContent = bName.trim().charAt(0).toUpperCase() || 'B');
+
+        this.renderBusinessProfilesList();
+        document.getElementById('modal-business-profiles')?.classList.remove('active');
+        this.showToast(`Switched active profile to "${bName}"`, 'success');
+    }
+
+    openNewBusinessProfileModal() {
+        document.getElementById('modal-business-profiles')?.classList.remove('active');
+        this.editingCompanyId = 'comp_' + Date.now();
+        this.pendingCompanyLogo = '';
+
+        const imgPreview = document.getElementById('company-logo-img-preview');
+        const placeholder = document.getElementById('company-logo-placeholder-icon');
+        const removeBtn = document.getElementById('btn-remove-company-logo');
+        if (imgPreview) { imgPreview.src = ''; imgPreview.style.display = 'none'; }
+        if (placeholder) placeholder.style.display = 'block';
+        if (removeBtn) removeBtn.style.display = 'none';
+
+        document.getElementById('set-business-name').value = '';
+        document.getElementById('set-gstin').value = '';
+        document.getElementById('set-state').value = '';
+        document.getElementById('set-phone').value = '';
+        document.getElementById('set-email').value = '';
+        document.getElementById('set-address').value = '';
+
+        document.getElementById('company-modal')?.classList.add('active');
+    }
+
+    editBusinessProfile(id) {
+        const comp = this.allCompanies.find(c => c.id === id);
+        if (!comp) return;
+
+        this.editingCompanyId = id;
+        this.pendingCompanyLogo = comp.logoUrl || '';
+
+        const imgPreview = document.getElementById('company-logo-img-preview');
+        const placeholder = document.getElementById('company-logo-placeholder-icon');
+        const removeBtn = document.getElementById('btn-remove-company-logo');
+
+        if (this.pendingCompanyLogo) {
+            if (imgPreview) { imgPreview.src = this.pendingCompanyLogo; imgPreview.style.display = 'block'; }
+            if (placeholder) placeholder.style.display = 'none';
+            if (removeBtn) removeBtn.style.display = 'inline-flex';
+        } else {
+            if (imgPreview) { imgPreview.src = ''; imgPreview.style.display = 'none'; }
+            if (placeholder) placeholder.style.display = 'block';
+            if (removeBtn) removeBtn.style.display = 'none';
+        }
+
+        document.getElementById('set-business-name').value = comp.businessName || '';
+        document.getElementById('set-gstin').value = comp.gstin || '';
+        document.getElementById('set-state').value = comp.state || '';
+        document.getElementById('set-phone').value = comp.phone || '';
+        document.getElementById('set-email').value = comp.email || '';
+        document.getElementById('set-address').value = comp.address || '';
+
+        document.getElementById('modal-business-profiles')?.classList.remove('active');
+        document.getElementById('company-modal')?.classList.add('active');
+    }
+
+    async deleteBusinessProfile(id) {
+        if (this.allCompanies.length <= 1) {
+            alert('You must have at least one business profile.');
+            return;
+        }
+        const comp = this.allCompanies.find(c => c.id === id);
+        if (!comp) return;
+        if (!confirm(`Are you sure you want to delete profile "${comp.businessName}"?`)) return;
+
+        await window.dbService.delete('companies', id);
+        this.allCompanies = this.allCompanies.filter(c => c.id !== id);
+        if (this.company?.id === id) {
+            await this.switchBusinessProfile(this.allCompanies[0].id);
+        } else {
+            this.renderBusinessProfilesList();
+        }
+        this.showToast(`Business profile "${comp.businessName}" deleted.`, 'info');
+    }
+
+    // ==========================================
+    // APP EXIT HANDLER (Point 11)
+    // ==========================================
+    initExitHandler() {
+        document.getElementById('btn-exit-app-no')?.addEventListener('click', () => {
+            document.getElementById('modal-exit-confirm')?.classList.remove('active');
+        });
+
+        document.getElementById('btn-exit-app-yes')?.addEventListener('click', () => {
+            this.confirmExitApp();
+        });
+
+        // Capacitor Android hardware back button integration
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+            window.Capacitor.Plugins.App.addListener('backButton', () => {
+                this.handleDeviceBackButton();
+            });
         }
     }
 
-    async saveFooterModal() {
-        const textarea = document.getElementById('footer-textarea');
-        const defaultCheck = document.getElementById('footer-set-default');
-        const newFooter = textarea ? textarea.value.trim() : '';
-
-        // 1. Update active voucher if in print/preview mode
-        if (this.activeVoucherForPrint) {
-            this.activeVoucherForPrint.footerText = newFooter;
-            await window.dbService.put('vouchers', this.activeVoucherForPrint);
-            const party = this.parties.find(p => p.id === this.activeVoucherForPrint.partyId);
-            this.renderPrintDocument(this.activeVoucherForPrint, this.company, party);
+    handleDeviceBackButton() {
+        // 1. If any modal is active, close the topmost active modal
+        const activeModals = Array.from(document.querySelectorAll('.modal-overlay.active'));
+        if (activeModals.length > 0) {
+            const topModal = activeModals[activeModals.length - 1];
+            topModal.classList.remove('active');
+            return;
         }
 
-        // 2. Set as company default if checked or if not editing specific voucher
-        if (defaultCheck?.checked || !this.activeVoucherForPrint) {
-            if (!this.company) this.company = {};
-            this.company.footerText = newFooter;
-            await window.dbService.put('companies', this.company);
+        // 2. If not on home screen, return to home screen
+        if (this.currentScreen !== 'screen-home') {
+            this.switchScreen('screen-home');
+            return;
         }
 
-        // 3. Sync with voucher form if open
-        const vformFooter = document.getElementById('vform-footer');
-        if (vformFooter) vformFooter.value = newFooter;
+        // 3. Otherwise on home screen, prompt confirmation modal before exiting!
+        this.promptExitApp();
+    }
 
-        document.getElementById('footer-modal')?.classList.remove('active');
-        this.showToast('Footer text updated successfully!', 'success');
+    promptExitApp() {
+        document.getElementById('modal-exit-confirm')?.classList.add('active');
+    }
+
+    confirmExitApp() {
+        document.getElementById('modal-exit-confirm')?.classList.remove('active');
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+            window.Capacitor.Plugins.App.exitApp();
+        } else if (window.electronAPI && typeof window.electronAPI.exitApp === 'function') {
+            window.electronAPI.exitApp();
+        } else {
+            try {
+                window.close();
+            } catch (e) {
+                console.warn('Window close not supported in browser environment');
+            }
+        }
+    }
+
+    // ==========================================
+    // PREVIEW CURRENT DRAFT VOUCHER (Point 7)
+    // ==========================================
+    previewCurrentVoucherDraft() {
+        const partyId = document.getElementById('vform-party-select')?.value;
+        const voucherNo = document.getElementById('vform-no')?.value?.trim() || 'DRAFT-01';
+        const party = partyId === 'cash_sale'
+            ? { id: 'cash_sale', name: 'Cash / Walk-in Customer', partyType: 'customer', state: this.company?.state || '', stateCode: this.company?.stateCode || '', gstin: '', phone: '', address: 'Counter Sale' }
+            : (this.parties.find(p => p.id === partyId) || { name: 'Customer' });
+
+        const items = [];
+        const rows = document.querySelectorAll('.vform-item-row');
+        const compState = this.company?.state || '';
+        const placeOfSupply = document.getElementById('vform-place-of-supply')?.value?.trim() || compState;
+        const taxType = InvoiceEngine.determineTaxType(compState, placeOfSupply);
+
+        rows.forEach(row => {
+            const select = row.querySelector('.vrow-item-select');
+            const customName = row.querySelector('.vrow-custom-name')?.value?.trim();
+            const itemId = select?.value;
+            const itm = this.items.find(i => i.id === itemId);
+            const name = customName || (itm ? itm.name : 'Custom Item');
+            const hsn = row.querySelector('.vrow-hsn')?.value?.trim() || '8544';
+            const qty = Number(row.querySelector('.vrow-qty')?.value) || 1;
+            const price = Number(row.querySelector('.vrow-price')?.value) || 0;
+            const discountPercent = Number(row.querySelector('.vrow-disc')?.value) || 0;
+            const taxRate = Number(row.querySelector('.vrow-tax-rate')?.value) || 0;
+            const calcs = InvoiceEngine.calculateItemTotals({ qty, price, discountPercent, taxRate }, taxType);
+            items.push({ itemId, name, hsn, qty, price, discountPercent, taxRate, ...calcs });
+        });
+
+        const totals = InvoiceEngine.calculateVoucherTotals(items, taxType, 'percentage', 0);
+        const voucherType = document.getElementById('vform-type')?.value || 'sales_invoice';
+
+        const draftVoucher = {
+            id: 'draft_' + Date.now(),
+            voucherNo,
+            voucherType,
+            date: document.getElementById('vform-date')?.value || new Date().toISOString().split('T')[0],
+            dueDate: document.getElementById('vform-due-date')?.value || '',
+            partyId,
+            partyName: party.name,
+            partyAddress: party.billingAddress || '',
+            partyGstin: party.gstin || '',
+            items,
+            subtotal: totals.subtotal,
+            taxableTotal: totals.taxableTotal,
+            cgst: voucherType === 'bill_of_supply' ? 0 : totals.cgst,
+            sgst: voucherType === 'bill_of_supply' ? 0 : totals.sgst,
+            igst: voucherType === 'bill_of_supply' ? 0 : totals.igst,
+            totalTax: voucherType === 'bill_of_supply' ? 0 : totals.totalTax,
+            grandTotal: totals.grandTotal,
+            paidAmount: Number(document.getElementById('vform-paid-amount')?.value) || 0,
+            balanceDue: Math.max(0, totals.grandTotal - (Number(document.getElementById('vform-paid-amount')?.value) || 0)),
+            termsAndConditions: document.getElementById('vform-terms')?.value?.trim() || '',
+            footerText: document.getElementById('vform-footer')?.value?.trim() || '',
+            signatureUrl: this.activeVoucherDraftSignature || null
+        };
+
+        this.activeVoucherForPrint = draftVoucher;
+        this.renderPrintDocument(draftVoucher, this.company, party);
+        document.getElementById('print-modal')?.classList.add('active');
     }
 
     // ==========================================
@@ -2511,7 +3283,9 @@ class BillFlowMobileApp {
 
         setTimeout(() => {
             this.signaturePad.initCanvas();
-            const currentSig = this.company?.signatureUrl;
+            const currentSig = (target === 'voucher_draft' && this.activeVoucherDraftSignature)
+                ? this.activeVoucherDraftSignature
+                : ((this.activeVoucherForPrint && this.activeVoucherForPrint.signatureUrl) || this.company?.signatureUrl);
             if (currentSig && this.signaturePad.isEmpty()) {
                 this.signaturePad.loadSignatureImage(currentSig);
             }
@@ -2537,6 +3311,43 @@ class BillFlowMobileApp {
             sigDataUrl = this.signaturePad.toDataURL();
         }
 
+        if (this.signatureTarget === 'voucher_draft') {
+            this.activeVoucherDraftSignature = sigDataUrl;
+            const signBtn = document.getElementById('btn-vform-sign');
+            if (signBtn) {
+                signBtn.innerHTML = '<span>✍️</span><span>Signed ✓</span>';
+                signBtn.classList.remove('btn-secondary');
+                signBtn.classList.add('btn-success');
+            }
+            document.getElementById('signature-modal')?.classList.remove('active');
+            this.showToast('Signature attached to invoice draft!', 'success');
+            return;
+        }
+
+        if (this.signatureTarget === 'voucher_prompt') {
+            if (this.activeVoucherForPrint) {
+                this.activeVoucherForPrint.signatureUrl = sigDataUrl;
+                await window.dbService.put('vouchers', this.activeVoucherForPrint);
+            }
+            document.getElementById('signature-modal')?.classList.remove('active');
+            this.showToast('Signature attached! Opening preview...', 'success');
+            this.openPrintModal(this.activeVoucherForPrint.id, false);
+            return;
+        }
+
+        if (this.signatureTarget === 'print_preview') {
+            if (this.activeVoucherForPrint) {
+                this.activeVoucherForPrint.signatureUrl = sigDataUrl;
+                await window.dbService.put('vouchers', this.activeVoucherForPrint);
+                const party = this.parties.find(p => p.id === this.activeVoucherForPrint.partyId);
+                this.renderPrintDocument(this.activeVoucherForPrint, this.company, party);
+            }
+            document.getElementById('signature-modal')?.classList.remove('active');
+            this.showToast('Signature attached to invoice!', 'success');
+            return;
+        }
+
+        // Default: company profile signature
         if (!this.company) this.company = { id: 'comp_primary' };
         this.company.signatureUrl = sigDataUrl;
         await window.dbService.put('companies', this.company);
@@ -2549,7 +3360,7 @@ class BillFlowMobileApp {
         }
 
         document.getElementById('signature-modal')?.classList.remove('active');
-        this.showToast('Digital Signature saved & applied successfully!', 'success');
+        this.showToast('Digital Signature saved successfully!', 'success');
     }
 
     // Reset All Data to Zero
@@ -2863,6 +3674,7 @@ class BillFlowMobileApp {
 
     openCompanyModal() {
         if (!this.company) this.company = { id: 'comp_primary' };
+        this.editingCompanyId = this.company.id;
         this.pendingCompanyLogo = this.company.logoUrl || '';
 
         const imgPreview = document.getElementById('company-logo-img-preview');
@@ -2908,13 +3720,16 @@ class BillFlowMobileApp {
             return;
         }
 
+        const compId = this.editingCompanyId || this.company?.id || 'comp_primary';
+        const targetExisting = (this.allCompanies || []).find(c => c.id === compId) || this.company || {};
+
         const logoToSave = (this.pendingCompanyLogo !== null && this.pendingCompanyLogo !== undefined)
             ? this.pendingCompanyLogo
-            : (this.company.logoUrl || '');
+            : (targetExisting.logoUrl || '');
 
-        this.company = {
-            ...this.company,
-            id: 'comp_primary',
+        const updatedCompany = {
+            ...targetExisting,
+            id: compId,
             businessName: bName,
             logoUrl: logoToSave,
             gstin: document.getElementById('set-gstin')?.value?.trim() || '',
@@ -2924,7 +3739,10 @@ class BillFlowMobileApp {
             address: document.getElementById('set-address')?.value?.trim() || ''
         };
 
-        await window.dbService.put('companies', this.company);
+        await window.dbService.put('companies', updatedCompany);
+        localStorage.setItem('billflow_active_company_id', compId);
+        this.editingCompanyId = null;
+
         document.getElementById('company-modal')?.classList.remove('active');
         this.showToast('Company settings saved successfully!', 'success');
         await this.loadAllState();
@@ -5311,7 +6129,56 @@ class BillFlowMobileApp {
             else if (val === 'debit_note') prefix = 'DN-26/';
             else if (val === 'expense') prefix = 'EXP-26/';
             else if (val === 'sales_order') prefix = 'SO-26/';
+            else if (val === 'bill_of_supply') prefix = this.company?.bosPrefix || 'BOS-26/';
             document.getElementById('vform-no').value = InvoiceEngine.generateNextVoucherNo(this.vouchers, prefix);
+            this.updateVoucherCalculations();
+        });
+
+        // Quick Add Product Button in Invoice Line Items Header (Point 6)
+        document.getElementById('btn-vform-new-product')?.addEventListener('click', () => this.openQuickAddProductModal());
+        document.getElementById('btn-save-quick-product')?.addEventListener('click', () => this.saveQuickProduct());
+
+        // Terms & Conditions and Footer Selectors in Invoice Creation (Points 4 & 5)
+        document.getElementById('vform-terms-select')?.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const preset = this.getTermsPresets().find(p => p.id === val);
+            if (preset) {
+                const el = document.getElementById('vform-terms');
+                if (el) el.value = preset.text;
+            }
+        });
+
+        document.getElementById('vform-footer-select')?.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const preset = this.getFooterPresets().find(p => p.id === val);
+            if (preset) {
+                const el = document.getElementById('vform-footer');
+                if (el) el.value = preset.text;
+            }
+        });
+
+        // Voucher Form Action Buttons (Points 7 & 13)
+        document.getElementById('btn-vform-sign')?.addEventListener('click', () => this.openSignatureModal('voucher_draft'));
+        document.getElementById('btn-vform-preview')?.addEventListener('click', () => this.previewCurrentVoucherDraft());
+
+        // GST Slabs Modal Listeners (Point 1)
+        document.getElementById('menu-gst-slabs')?.addEventListener('click', () => this.openGstSlabsModal());
+        document.getElementById('btn-add-gst-slab')?.addEventListener('click', () => this.addGstSlab());
+
+        // Business Profiles Listeners (Point 10)
+        document.getElementById('menu-company-details')?.addEventListener('click', () => this.openBusinessProfilesModal());
+        document.getElementById('btn-add-new-company-profile')?.addEventListener('click', () => this.openNewBusinessProfileModal());
+
+        // Pre-Print Signature Prompt Listeners (Points 7 & 13)
+        document.getElementById('btn-sign-prompt-add')?.addEventListener('click', () => {
+            document.getElementById('modal-sign-prompt')?.classList.remove('active');
+            this.openSignatureModal('voucher_prompt');
+        });
+        document.getElementById('btn-sign-prompt-skip')?.addEventListener('click', () => {
+            document.getElementById('modal-sign-prompt')?.classList.remove('active');
+            if (!this.skippedSignVoucherIds) this.skippedSignVoucherIds = new Set();
+            if (this.activeVoucherForPrint) this.skippedSignVoucherIds.add(this.activeVoucherForPrint.id);
+            this.openPrintModal(this.activeVoucherForPrint.id, false);
         });
 
         // Print & Share
@@ -5339,6 +6206,15 @@ class BillFlowMobileApp {
         document.getElementById('btn-print-trigger')?.addEventListener('click', () => this.triggerPrint());
         document.getElementById('btn-print-whatsapp')?.addEventListener('click', () => this.shareInvoicePdf());
         document.getElementById('btn-download-pdf')?.addEventListener('click', () => this.downloadInvoicePdf());
+        document.getElementById('btn-print-save-pdf')?.addEventListener('click', () => this.downloadInvoicePdf());
+        document.getElementById('btn-print-save-share')?.addEventListener('click', () => this.shareInvoicePdf());
+        document.getElementById('btn-preview-sign')?.addEventListener('click', () => this.openSignatureModal('print_preview'));
+        document.getElementById('btn-preview-edit')?.addEventListener('click', () => {
+            document.getElementById('print-modal')?.classList.remove('active');
+            if (this.activeVoucherForPrint) {
+                this.openVoucherModal(this.activeVoucherForPrint.voucherType, this.activeVoucherForPrint);
+            }
+        });
         document.getElementById('btn-print-edit-terms')?.addEventListener('click', () => this.openTermsModal());
         document.getElementById('btn-print-edit-footer')?.addEventListener('click', () => this.openFooterModal());
         document.getElementById('btn-print-modify-invoice')?.addEventListener('click', () => {
@@ -5353,25 +6229,18 @@ class BillFlowMobileApp {
         });
         document.getElementById('btn-open-sig-modal')?.addEventListener('click', () => this.openSignatureModal('voucher'));
 
-
-        // Terms & Conditions Modal Listeners
+        // Terms & Conditions Modal Listeners (15 Presets)
         document.getElementById('menu-edit-terms')?.addEventListener('click', () => this.openTermsModal());
         document.getElementById('btn-export-modal-edit-terms')?.addEventListener('click', () => this.openTermsModal());
-        document.getElementById('btn-save-terms-modal')?.addEventListener('click', () => this.saveTermsModal());
-        document.querySelectorAll('.terms-preset-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.applyTermsPreset(btn.dataset.preset);
-            });
-        });
+        document.getElementById('btn-tc-new-form')?.addEventListener('click', () => this.resetTermsForm());
+        document.getElementById('btn-tc-form-save')?.addEventListener('click', () => this.saveTermsPreset());
+        document.getElementById('btn-tc-form-reset')?.addEventListener('click', () => this.resetTermsForm());
 
-        // Invoice Footer Modal Listeners
+        // Invoice Footer Modal Listeners (15 Presets)
         document.getElementById('menu-edit-footer')?.addEventListener('click', () => this.openFooterModal());
-        document.getElementById('btn-save-footer-modal')?.addEventListener('click', () => this.saveFooterModal());
-        document.querySelectorAll('.footer-preset-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.applyFooterPreset(btn.dataset.preset);
-            });
-        });
+        document.getElementById('btn-footer-new-form')?.addEventListener('click', () => this.resetFooterForm());
+        document.getElementById('btn-footer-form-save')?.addEventListener('click', () => this.saveFooterPreset());
+        document.getElementById('btn-footer-form-reset')?.addEventListener('click', () => this.resetFooterForm());
 
         // Tax Invoice Tab (Voucher Modal) Terms & Footer Quick Action Presets
         document.getElementById('btn-vform-terms-standard')?.addEventListener('click', () => {

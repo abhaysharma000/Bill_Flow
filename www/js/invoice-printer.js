@@ -85,12 +85,16 @@ class InvoicePrinter {
     }
     // Generate HTML for International Tabular B&W / Dot Matrix Printer Invoice (A4 / Continuous Stationary)
     static renderDotMatrixInternational(voucher, company, party, fontClass = 'font-arial', scaleClass = 'font-scale-standard', copyType = 'ORIGINAL FOR RECIPIENT') {
+        const isBillOfSupply = voucher.voucherType === 'bill_of_supply';
         const isTaxInvoice = voucher.voucherType === 'sales_invoice';
-        const docTitle = isTaxInvoice ? 'TAX INVOICE' :
-            (voucher.voucherType === 'estimate' ? 'PROFORMA INVOICE / QUOTATION' :
-                (voucher.voucherType === 'delivery_challan' ? 'DELIVERY CHALLAN' :
-                    (voucher.voucherType === 'credit_note' ? 'CREDIT NOTE' :
-                        (voucher.voucherType === 'debit_note' ? 'DEBIT NOTE' : 'COMMERCIAL INVOICE'))));
+        const docTitle = isBillOfSupply ? 'BILL OF SUPPLY' :
+            (isTaxInvoice ? 'TAX INVOICE' :
+                (voucher.voucherType === 'estimate' ? 'PROFORMA INVOICE / QUOTATION' :
+                    (voucher.voucherType === 'delivery_challan' ? 'DELIVERY CHALLAN' :
+                        (voucher.voucherType === 'credit_note' ? 'CREDIT NOTE' :
+                            (voucher.voucherType === 'debit_note' ? 'DEBIT NOTE' : 'COMMERCIAL INVOICE')))));
+
+        const hasDiscount = voucher.items && voucher.items.some(itm => Number(itm.discountPercent || 0) > 0 || Number(itm.discountAmount || 0) > 0);
 
 
         // Calculate line item totals
@@ -129,9 +133,14 @@ class InvoicePrinter {
                 </div>
 
                 <!-- MIDDLE: SHIFTED DOCUMENT TITLE & BADGE -->
-                <div style="flex: 1; text-align: center; padding: 0 4px;">
+                <div style="flex: 1.2; text-align: center; padding: 0 4px;">
                     <div style="font-size: 8px; font-weight: bold; border: 1px solid #000; padding: 1px 8px; display: inline-block; margin-bottom: 3px; letter-spacing: 0.5px; text-transform: uppercase;">${copyType}</div>
                     <div class="dm-title" style="letter-spacing: 0.8px; text-align: center;">${docTitle}</div>
+                    ${isBillOfSupply ? `
+                        <div style="font-size: 7px; font-weight: bold; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.2px; line-height: 1.2;">
+                            Composition taxable person, not eligible to collect tax on supplies
+                        </div>
+                    ` : ''}
                 </div>
 
                 <!-- RIGHT: AFFIXED COMPANY LOGO -->
@@ -212,14 +221,14 @@ class InvoicePrinter {
                 <thead>
                     <tr style="border-bottom: 1.5px solid #000;">
                         <th style="width: 4%; text-align: center;">#</th>
-                        <th style="width: 33%; text-align: left;">Description of Goods / Services</th>
+                        <th style="width: ${hasDiscount ? '33%' : '38%'}; text-align: left;">Description of Goods / Services</th>
                         <th style="width: 9%; text-align: center;">HSN/SAC</th>
                         <th style="width: 6%; text-align: center;">Qty</th>
                         <th style="width: 5%; text-align: center;">Unit</th>
                         <th style="width: 9%; text-align: right;">Unit Rate</th>
-                        <th style="width: 5%; text-align: center;">Disc%</th>
+                        ${hasDiscount ? '<th style="width: 5%; text-align: center;">Disc%</th>' : ''}
                         <th style="width: 9%; text-align: right;">Taxable (₹)</th>
-                        <th style="width: 7%; text-align: center;">Tax %</th>
+                        ${!isBillOfSupply ? '<th style="width: 7%; text-align: center;">Tax %</th>' : ''}
                         <th style="width: 13%; text-align: right;">Total Amount</th>
                     </tr>
                 </thead>
@@ -235,9 +244,9 @@ class InvoicePrinter {
                             <td style="text-align: center; font-weight: bold; border-bottom: 1px dotted #555;">${itm.qty}</td>
                             <td style="text-align: center; border-bottom: 1px dotted #555;">${itm.unit || 'Pcs'}</td>
                             <td style="text-align: right; border-bottom: 1px dotted #555;">${Number(itm.price || 0).toFixed(2)}</td>
-                            <td style="text-align: center; border-bottom: 1px dotted #555;">${itm.discountPercent > 0 ? `${itm.discountPercent}%` : '-'}</td>
+                            ${hasDiscount ? `<td style="text-align: center; border-bottom: 1px dotted #555;">${itm.discountPercent > 0 ? `${itm.discountPercent}%` : '-'}</td>` : ''}
                             <td style="text-align: right; border-bottom: 1px dotted #555;">${Number(itm.taxableAmount || 0).toFixed(2)}</td>
-                            <td style="text-align: center; border-bottom: 1px dotted #555;">${itm.taxRate || 18}%</td>
+                            ${!isBillOfSupply ? `<td style="text-align: center; border-bottom: 1px dotted #555;">${itm.taxRate || 18}%</td>` : ''}
                             <td style="text-align: right; font-weight: bold; border-bottom: 1px dotted #555;">${Number(itm.totalAmount || 0).toFixed(2)}</td>
                         </tr>
                     `).join('')}
@@ -250,9 +259,9 @@ class InvoicePrinter {
                             <td style="border-bottom: 1px dotted #ccc;">&nbsp;</td>
                             <td style="border-bottom: 1px dotted #ccc;">&nbsp;</td>
                             <td style="border-bottom: 1px dotted #ccc;">&nbsp;</td>
+                            ${hasDiscount ? '<td style="border-bottom: 1px dotted #ccc;">&nbsp;</td>' : ''}
                             <td style="border-bottom: 1px dotted #ccc;">&nbsp;</td>
-                            <td style="border-bottom: 1px dotted #ccc;">&nbsp;</td>
-                            <td style="border-bottom: 1px dotted #ccc;">&nbsp;</td>
+                            ${!isBillOfSupply ? '<td style="border-bottom: 1px dotted #ccc;">&nbsp;</td>' : ''}
                             <td style="border-bottom: 1px dotted #ccc;">&nbsp;</td>
                         </tr>
                     `).join('')}
@@ -263,9 +272,9 @@ class InvoicePrinter {
                         <td style="text-align: center;">${totalItemsQty}</td>
                         <td></td>
                         <td></td>
-                        <td></td>
+                        ${hasDiscount ? '<td></td>' : ''}
                         <td style="text-align: right;">${totalTaxableValue.toFixed(2)}</td>
-                        <td></td>
+                        ${!isBillOfSupply ? '<td></td>' : ''}
                         <td style="text-align: right;">₹ ${totalLineAmount.toFixed(2)}</td>
                     </tr>
                 </tbody>
@@ -309,25 +318,27 @@ class InvoicePrinter {
                                     <td style="text-align: right; padding: 2px 4px;">+ ₹ ${Number(voucher.transporterCost).toFixed(2)}</td>
                                 </tr>
                             ` : ''}
-                            <tr style="border-bottom: 1px solid #000;">
-                                <td style="padding: 2px 4px;">Taxable Amount</td>
-                                <td style="text-align: right; padding: 2px 4px;">₹ ${Number(voucher.taxableTotal || 0).toFixed(2)}</td>
-                            </tr>
-                            ${voucher.taxType === 'intra' ? `
+                            ${!isBillOfSupply ? `
                                 <tr style="border-bottom: 1px solid #000;">
-                                    <td style="padding: 2px 4px;">CGST</td>
-                                    <td style="text-align: right; padding: 2px 4px;">₹ ${Number(voucher.cgst || 0).toFixed(2)}</td>
+                                    <td style="padding: 2px 4px;">Taxable Amount</td>
+                                    <td style="text-align: right; padding: 2px 4px;">₹ ${Number(voucher.taxableTotal || 0).toFixed(2)}</td>
                                 </tr>
-                                <tr style="border-bottom: 1px solid #000;">
-                                    <td style="padding: 2px 4px;">SGST</td>
-                                    <td style="text-align: right; padding: 2px 4px;">₹ ${Number(voucher.sgst || 0).toFixed(2)}</td>
-                                </tr>
-                            ` : `
-                                <tr style="border-bottom: 1px solid #000;">
-                                    <td style="padding: 2px 4px;">IGST</td>
-                                    <td style="text-align: right; padding: 2px 4px;">₹ ${Number(voucher.igst || 0).toFixed(2)}</td>
-                                </tr>
-                            `}
+                                ${voucher.taxType === 'intra' ? `
+                                    <tr style="border-bottom: 1px solid #000;">
+                                        <td style="padding: 2px 4px;">CGST</td>
+                                        <td style="text-align: right; padding: 2px 4px;">₹ ${Number(voucher.cgst || 0).toFixed(2)}</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #000;">
+                                        <td style="padding: 2px 4px;">SGST</td>
+                                        <td style="text-align: right; padding: 2px 4px;">₹ ${Number(voucher.sgst || 0).toFixed(2)}</td>
+                                    </tr>
+                                ` : `
+                                    <tr style="border-bottom: 1px solid #000;">
+                                        <td style="padding: 2px 4px;">IGST</td>
+                                        <td style="text-align: right; padding: 2px 4px;">₹ ${Number(voucher.igst || 0).toFixed(2)}</td>
+                                    </tr>
+                                `}
+                            ` : ''}
                             ${(voucher.roundOff || 0) !== 0 ? `
                                 <tr style="border-bottom: 1px solid #000;">
                                     <td style="padding: 2px 4px;">Round Off</td>
@@ -352,6 +363,7 @@ class InvoicePrinter {
             </table>
 
             <!-- 6. STATUTORY HSN/SAC TAX SUMMARY -->
+            ${!isBillOfSupply ? `
             <table class="dm-grid-table" style="margin-top: 3px; border-top: none;">
                 <thead>
                     <tr style="background:#f1f5f9;">
@@ -382,6 +394,7 @@ class InvoicePrinter {
                     `).join('')}
                 </tbody>
             </table>
+            ` : ''}
 
             <!-- 6. STATUTORY DECLARATION & AUTHORIZED SIGNATURE -->
             <table class="dm-grid-table" style="border-top: none;">
@@ -417,12 +430,16 @@ class InvoicePrinter {
 
     // Generate HTML for A4 Modern GST Invoice
     static renderModernGST(voucher, company, party, copyType = 'ORIGINAL FOR RECIPIENT') {
+        const isBillOfSupply = voucher.voucherType === 'bill_of_supply';
         const isTaxInvoice = voucher.voucherType === 'sales_invoice';
-        const docTitle = isTaxInvoice ? 'TAX INVOICE' :
-            (voucher.voucherType === 'estimate' ? 'ESTIMATE / QUOTATION' :
-                (voucher.voucherType === 'delivery_challan' ? 'DELIVERY CHALLAN' :
-                    (voucher.voucherType === 'credit_note' ? 'CREDIT NOTE (SALES RETURN)' :
-                        (voucher.voucherType === 'debit_note' ? 'DEBIT NOTE (PURCHASE RETURN)' : 'PROFORMA INVOICE'))));
+        const docTitle = isBillOfSupply ? 'BILL OF SUPPLY' :
+            (isTaxInvoice ? 'TAX INVOICE' :
+                (voucher.voucherType === 'estimate' ? 'ESTIMATE / QUOTATION' :
+                    (voucher.voucherType === 'delivery_challan' ? 'DELIVERY CHALLAN' :
+                        (voucher.voucherType === 'credit_note' ? 'CREDIT NOTE (SALES RETURN)' :
+                            (voucher.voucherType === 'debit_note' ? 'DEBIT NOTE (PURCHASE RETURN)' : 'PROFORMA INVOICE')))));
+
+        const hasDiscount = voucher.items && voucher.items.some(itm => Number(itm.discountPercent || 0) > 0 || Number(itm.discountAmount || 0) > 0);
 
 
         // HSN Summary aggregation
@@ -463,6 +480,11 @@ class InvoicePrinter {
                 <div class="inv-badge-block">
                     <div style="font-size: 8px; font-weight: 700; border: 1px solid #1e3a8a; color:#1e3a8a; padding: 1px 6px; border-radius: 3px; display: inline-block; margin-bottom: 3px; text-transform: uppercase;">${copyType}</div>
                     <div class="doc-title-badge">${docTitle}</div>
+                    ${isBillOfSupply ? `
+                        <div style="font-size: 7.5px; font-weight: 700; color: #1e3a8a; text-transform: uppercase; margin-top: 2px; line-height: 1.2;">
+                            Composition Taxable Person, Not Eligible to Collect Tax on Supplies
+                        </div>
+                    ` : ''}
                     <div class="inv-meta-grid">
                         <div class="meta-label">Invoice No:</div>
                         <div class="meta-value highlight">${voucher.voucherNo}</div>
@@ -513,13 +535,13 @@ class InvoicePrinter {
                 <thead>
                     <tr>
                         <th style="width: 4%">#</th>
-                        <th style="width: 30%">Item Description</th>
+                        <th style="width: ${hasDiscount ? '30%' : '37%'}">Item Description</th>
                         <th style="width: 9%">HSN</th>
                         <th style="width: 8%">Qty</th>
                         <th style="width: 10%">Rate (₹)</th>
-                        <th style="width: 7%">Disc %</th>
+                        ${hasDiscount ? '<th style="width: 7%">Disc %</th>' : ''}
                         <th style="width: 12%">Taxable (₹)</th>
-                        <th style="width: 6%">GST</th>
+                        ${!isBillOfSupply ? '<th style="width: 6%">GST</th>' : ''}
                         <th style="width: 14%">Amount (₹)</th>
                     </tr>
                 </thead>
@@ -534,9 +556,9 @@ class InvoicePrinter {
                             <td class="text-center">${itm.hsn || '-'}</td>
                             <td class="text-center"><strong>${itm.qty}</strong> <span class="unit-text">${itm.unit || ''}</span></td>
                             <td class="text-right">${InvoiceEngine.formatCurrency(itm.price, false)}</td>
-                            <td class="text-center">${itm.discountPercent > 0 ? `${itm.discountPercent}%` : '-'}</td>
+                            ${hasDiscount ? `<td class="text-center">${itm.discountPercent > 0 ? `${itm.discountPercent}%` : '-'}</td>` : ''}
                             <td class="text-right">${InvoiceEngine.formatCurrency(itm.taxableAmount, false)}</td>
-                            <td class="text-center">${itm.taxRate}%</td>
+                            ${!isBillOfSupply ? `<td class="text-center">${itm.taxRate}%</td>` : ''}
                             <td class="text-right font-bold">${InvoiceEngine.formatCurrency(itm.totalAmount, false)}</td>
                         </tr>
                     `).join('')}
@@ -579,25 +601,27 @@ class InvoicePrinter {
                                 <span>+ ${InvoiceEngine.formatCurrency(voucher.transporterCost)}</span>
                             </div>
                         ` : ''}
-                        <div class="summary-row">
-                            <span>Taxable Total:</span>
-                            <span>${InvoiceEngine.formatCurrency(voucher.taxableTotal)}</span>
-                        </div>
-                        ${voucher.taxType === 'intra' ? `
+                        ${!isBillOfSupply ? `
                             <div class="summary-row">
-                                <span>CGST:</span>
-                                <span>${InvoiceEngine.formatCurrency(voucher.cgst)}</span>
+                                <span>Taxable Total:</span>
+                                <span>${InvoiceEngine.formatCurrency(voucher.taxableTotal)}</span>
                             </div>
-                            <div class="summary-row">
-                                <span>SGST:</span>
-                                <span>${InvoiceEngine.formatCurrency(voucher.sgst)}</span>
-                            </div>
-                        ` : `
-                            <div class="summary-row">
-                                <span>IGST:</span>
-                                <span>${InvoiceEngine.formatCurrency(voucher.igst)}</span>
-                            </div>
-                        `}
+                            ${voucher.taxType === 'intra' ? `
+                                <div class="summary-row">
+                                    <span>CGST:</span>
+                                    <span>${InvoiceEngine.formatCurrency(voucher.cgst)}</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>SGST:</span>
+                                    <span>${InvoiceEngine.formatCurrency(voucher.sgst)}</span>
+                                </div>
+                            ` : `
+                                <div class="summary-row">
+                                    <span>IGST:</span>
+                                    <span>${InvoiceEngine.formatCurrency(voucher.igst)}</span>
+                                </div>
+                            `}
+                        ` : ''}
                         ${voucher.roundOff !== 0 ? `
                             <div class="summary-row">
                                 <span>Round Off:</span>
@@ -634,7 +658,8 @@ class InvoicePrinter {
                 </div>
             </div>
 
-            <!-- Tax Breakdown (HSN Summary Table) -->
+            <!-- Tax Breakdown (HSN Summary Table - Omitted for Bill of Supply) -->
+            ${!isBillOfSupply ? `
             <div class="hsn-summary-wrapper">
                 <div class="box-title" style="margin-bottom:4px;">GST TAX BREAKDOWN (HSN / SAC SUMMARY)</div>
                 <table class="hsn-table">
@@ -674,6 +699,7 @@ class InvoicePrinter {
                     </tbody>
                 </table>
             </div>
+            ` : ''}
 
             ${(voucher.footerText !== undefined && voucher.footerText !== null ? voucher.footerText : (company.footerText || '')) ? `
             <div class="inv-bottom-tagline">
