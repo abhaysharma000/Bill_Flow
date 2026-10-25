@@ -1045,8 +1045,48 @@ class BillFlowMobileApp {
             }
         }
 
+        this.applyItemsViewMode();
         this.updateVoucherCalculations();
         modal.classList.add('active');
+    }
+
+    applyItemsViewMode(mode = null) {
+        if (!mode) {
+            mode = localStorage.getItem('billflow_items_view_mode');
+            if (!mode) {
+                mode = (window.innerWidth <= 768) ? 'cards' : 'table';
+            }
+        }
+        this.itemsViewMode = mode;
+        const container = document.getElementById('voucher-items-builder-container');
+        const viewIcon = document.getElementById('items-view-icon');
+        const viewLabel = document.getElementById('items-view-label');
+
+        if (container) {
+            if (mode === 'cards') {
+                container.classList.add('view-cards');
+                container.classList.remove('view-table');
+            } else {
+                container.classList.add('view-table');
+                container.classList.remove('view-cards');
+            }
+        }
+
+        if (viewIcon && viewLabel) {
+            if (mode === 'cards') {
+                viewIcon.textContent = '📊';
+                viewLabel.textContent = 'Table';
+            } else {
+                viewIcon.textContent = '📋';
+                viewLabel.textContent = 'Cards';
+            }
+        }
+    }
+
+    toggleItemsViewMode() {
+        const nextMode = (this.itemsViewMode === 'cards') ? 'table' : 'cards';
+        localStorage.setItem('billflow_items_view_mode', nextMode);
+        this.applyItemsViewMode(nextMode);
     }
 
     addItemRowToVoucher(initialData = null) {
@@ -1069,19 +1109,46 @@ class BillFlowMobileApp {
         const price = initialData ? Number(initialData.price || 0) : 0;
         const disc = initialData ? Number(initialData.discountPercent || 0) : 0;
         const taxRate = initialData ? Number(initialData.taxRate || 18) : 18;
+        const rowCount = tbody.querySelectorAll('.vform-item-row').length + 1;
 
         tr.innerHTML = `
-            <td>
-                <select class="form-control vrow-item-select" onchange="window.app.onVoucherItemSelect(this)" style="font-size:11px;">
-                    ${itemOptions}
-                </select>
-                <input type="text" class="form-control vrow-custom-name" placeholder="Custom name" value="${customName ? customName.replace(/"/g, '&quot;') : ''}" style="margin-top:2px; font-size:10px; height:24px;"/>
+            <td class="col-item-desc" data-label="Item Description">
+                <div class="item-card-row-header">
+                    <span class="item-row-badge">Item #${rowCount}</span>
+                    <button type="button" class="btn-del-item-card" title="Remove Item" onclick="window.app.removeItemRow(this)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <span>Remove</span>
+                    </button>
+                </div>
+                <div class="col-field-group">
+                    <label class="col-label">Select Product / Item</label>
+                    <select class="form-control vrow-item-select" onchange="window.app.onVoucherItemSelect(this)">
+                        ${itemOptions}
+                    </select>
+                </div>
+                <div class="col-field-group vrow-custom-name-wrap" style="margin-top:6px;">
+                    <label class="col-label col-label-custom">Custom Name / Notes</label>
+                    <input type="text" class="form-control vrow-custom-name" placeholder="Custom product name or notes" value="${customName ? customName.replace(/"/g, '&quot;') : ''}"/>
+                </div>
             </td>
-            <td><input type="text" class="form-control vrow-hsn" placeholder="7318" value="${hsn}"/></td>
-            <td><input type="number" class="form-control vrow-qty" value="${qty}" min="1" oninput="window.app.updateVoucherCalculations()"/></td>
-            <td><input type="number" step="0.01" class="form-control vrow-price" value="${price.toFixed(2)}" oninput="window.app.updateVoucherCalculations()"/></td>
-            <td><input type="number" step="0.1" class="form-control vrow-disc" value="${disc}" min="0" max="100" oninput="window.app.updateVoucherCalculations()"/></td>
-            <td>
+            <td class="col-item-hsn" data-label="HSN / SAC">
+                <label class="col-label">HSN / SAC</label>
+                <input type="text" class="form-control vrow-hsn" placeholder="7318" value="${hsn}" onfocus="this.select()"/>
+            </td>
+            <td class="col-item-qty" data-label="Quantity">
+                <label class="col-label">Qty</label>
+                <input type="number" class="form-control vrow-qty" value="${qty}" min="1" step="any" onfocus="this.select()" oninput="window.app.updateVoucherCalculations()"/>
+            </td>
+            <td class="col-item-rate" data-label="Rate (₹)">
+                <label class="col-label">Rate (₹)</label>
+                <input type="number" step="0.01" class="form-control vrow-price" value="${price.toFixed(2)}" onfocus="this.select()" oninput="window.app.updateVoucherCalculations()"/>
+            </td>
+            <td class="col-item-disc" data-label="Disc %">
+                <label class="col-label">Disc %</label>
+                <input type="number" step="0.1" class="form-control vrow-disc" value="${disc}" min="0" max="100" onfocus="this.select()" oninput="window.app.updateVoucherCalculations()"/>
+            </td>
+            <td class="col-item-tax" data-label="GST %">
+                <label class="col-label">GST %</label>
                 <select class="form-control vrow-tax-rate" onchange="window.app.updateVoucherCalculations()">
                     <option value="0" ${taxRate === 0 ? 'selected' : ''}>0%</option>
                     <option value="5" ${taxRate === 5 ? 'selected' : ''}>5%</option>
@@ -1090,21 +1157,41 @@ class BillFlowMobileApp {
                     <option value="28" ${taxRate === 28 ? 'selected' : ''}>28%</option>
                 </select>
             </td>
-            <td style="text-align:right; font-weight:700;" class="vrow-total-amt">₹ 0.00</td>
-            <td style="text-align:center;">
-                <button type="button" class="btn-icon" style="color:#ef4444; width:24px; height:24px;" onclick="window.app.removeItemRow(this)">&times;</button>
+            <td class="col-item-total" data-label="Total (₹)">
+                <label class="col-label">Total</label>
+                <div class="vrow-total-amt">₹ 0.00</div>
+            </td>
+            <td class="col-item-action">
+                <button type="button" class="btn-del-item-table" title="Delete Row" onclick="window.app.removeItemRow(this)">&times;</button>
             </td>
         `;
 
         tbody.appendChild(tr);
+        this.updateItemRowIndices();
     }
 
     removeItemRow(buttonElem) {
         const row = buttonElem.closest('tr');
         if (row) {
             row.remove();
+            const tbody = document.getElementById('vform-items-tbody');
+            if (tbody && tbody.querySelectorAll('.vform-item-row').length === 0) {
+                this.addItemRowToVoucher();
+            } else {
+                this.updateItemRowIndices();
+            }
             this.updateVoucherCalculations();
         }
+    }
+
+    updateItemRowIndices() {
+        const tbody = document.getElementById('vform-items-tbody');
+        if (!tbody) return;
+        const rows = tbody.querySelectorAll('.vform-item-row');
+        rows.forEach((r, idx) => {
+            const badge = r.querySelector('.item-row-badge');
+            if (badge) badge.textContent = `Item #${idx + 1}`;
+        });
     }
 
     onVoucherItemSelect(selectElem) {
@@ -5191,6 +5278,7 @@ class BillFlowMobileApp {
         document.getElementById('btn-generate-eway')?.addEventListener('click', () => this.generateEwaySlip());
 
         // Voucher Handlers
+        document.getElementById('btn-toggle-items-view')?.addEventListener('click', () => this.toggleItemsViewMode());
         document.getElementById('btn-add-item-row')?.addEventListener('click', () => this.addItemRowToVoucher());
         document.getElementById('btn-voucher-quick-add-party')?.addEventListener('click', () => this.openPartyModal());
         document.getElementById('vform-party-select')?.addEventListener('change', () => this.onVoucherPartyChange());

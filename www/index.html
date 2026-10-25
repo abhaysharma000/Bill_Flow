@@ -726,26 +726,29 @@
                     <!-- Line Items Header -->
                     <div class="modal-subheading-row">
                         <h4>Products & Items</h4>
-                        <div style="display:flex; gap:6px;">
-                            <button type="button" class="btn btn-secondary btn-sm" id="btn-scan-barcode-voucher" style="display:inline-flex; align-items:center; gap:4px; font-weight:700;">
-                                <span>📷</span><span>Scan Barcode</span>
+                        <div class="modal-subheading-actions" style="display:flex; gap:6px; align-items:center;">
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-items-view" title="Toggle Card / Table View" style="display:inline-flex; align-items:center; gap:4px; font-weight:600;">
+                                <span id="items-view-icon">📊</span><span id="items-view-label">Table</span>
                             </button>
-                            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-item-row">+ Add Item Row</button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-scan-barcode-voucher" style="display:inline-flex; align-items:center; gap:4px; font-weight:700;">
+                                <span>📷</span><span>Scan</span>
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm" id="btn-add-item-row" style="font-weight:700;">+ Add Row</button>
                         </div>
                     </div>
 
-                    <div class="table-responsive">
+                    <div class="table-responsive items-builder-wrapper view-cards" id="voucher-items-builder-container">
                         <table class="item-row-builder-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 32%">Item Description</th>
-                                    <th style="width: 10%">HSN</th>
-                                    <th style="width: 10%">Qty</th>
-                                    <th style="width: 14%">Rate (₹)</th>
-                                    <th style="width: 10%">Disc %</th>
-                                    <th style="width: 10%">GST %</th>
-                                    <th style="width: 14%; text-align:right;">Total (₹)</th>
-                                    <th style="width: 4%"></th>
+                                    <th style="width: 28%; min-width: 190px;">Item Description</th>
+                                    <th style="width: 11%; min-width: 85px;">HSN / SAC</th>
+                                    <th style="width: 10%; min-width: 75px;">Qty</th>
+                                    <th style="width: 15%; min-width: 110px;">Rate (₹)</th>
+                                    <th style="width: 10%; min-width: 75px;">Disc %</th>
+                                    <th style="width: 11%; min-width: 85px;">GST %</th>
+                                    <th style="width: 12%; min-width: 100px; text-align:right;">Total (₹)</th>
+                                    <th style="width: 3%; min-width: 36px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="vform-items-tbody"></tbody>

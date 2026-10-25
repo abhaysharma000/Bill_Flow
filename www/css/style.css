@@ -1931,30 +1931,411 @@ textarea.form-control {
     margin-top: 6px;
 }
 
-/* Items Builder Table */
-.item-row-builder-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    margin-bottom: 10px;
+/* ==========================================================================
+   PRODUCTS & ITEMS BUILDER SECTION (MOBILE CARDS & RESPONSIVE TABLE)
+   ========================================================================== */
+
+.modal-subheading-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    margin-bottom: 8px;
 }
 
-.item-row-builder-table th {
-    background-color: #1e232b;
-    padding: 6px;
-    color: var(--text-sub);
-    text-align: left;
-    font-size: 10px;
+.modal-subheading-row h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-white);
+}
+
+.modal-subheading-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Base Responsive Container */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+}
+
+.items-builder-wrapper {
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   MODE 1: CARD VIEW (Mobile-Optimized Touch Layout)
+   -------------------------------------------------------------------------- */
+.items-builder-wrapper.view-cards {
+    overflow-x: visible !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.items-builder-wrapper.view-cards .item-row-builder-table {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    border-collapse: separate !important;
+}
+
+.items-builder-wrapper.view-cards .item-row-builder-table thead {
+    display: none !important;
+}
+
+.items-builder-wrapper.view-cards .item-row-builder-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+}
+
+.items-builder-wrapper.view-cards tr.vform-item-row {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 8px 10px !important;
+    background: #171b25 !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.09) !important;
+    border-radius: 14px !important;
+    padding: 12px 14px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.items-builder-wrapper.view-cards tr.vform-item-row:focus-within {
+    border-color: rgba(67, 97, 238, 0.5) !important;
+    box-shadow: 0 4px 18px rgba(67, 97, 238, 0.15) !important;
+}
+
+/* Card Header */
+.item-card-row-header {
+    display: none;
+}
+
+.items-builder-wrapper.view-cards .item-card-row-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+.item-row-badge {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(67, 97, 238, 0.16);
+    color: #93c5fd;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 9px;
+    border-radius: 20px;
+    border: 1px solid rgba(67, 97, 238, 0.3);
+    letter-spacing: 0.5px;
     text-transform: uppercase;
 }
 
-.item-row-builder-table td {
-    padding: 4px;
+.btn-del-item-card {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(239, 68, 68, 0.25) !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
 }
 
-.item-row-builder-table input, .item-row-builder-table select {
-    height: 32px;
-    font-size: 11px;
+.btn-del-item-card:hover {
+    background: rgba(239, 68, 68, 0.22) !important;
+    color: #ef4444 !important;
+}
+
+/* Spans in Card View */
+.items-builder-wrapper.view-cards .col-item-desc {
+    grid-column: span 6 !important;
+    display: block !important;
+    padding: 0 !important;
+}
+
+.items-builder-wrapper.view-cards .col-item-hsn {
+    grid-column: span 2 !important;
+    display: block !important;
+    padding: 0 !important;
+}
+
+.items-builder-wrapper.view-cards .col-item-qty {
+    grid-column: span 2 !important;
+    display: block !important;
+    padding: 0 !important;
+}
+
+.items-builder-wrapper.view-cards .col-item-rate {
+    grid-column: span 2 !important;
+    display: block !important;
+    padding: 0 !important;
+}
+
+.items-builder-wrapper.view-cards .col-item-disc {
+    grid-column: span 2 !important;
+    display: block !important;
+    padding: 0 !important;
+}
+
+.items-builder-wrapper.view-cards .col-item-tax {
+    grid-column: span 2 !important;
+    display: block !important;
+    padding: 0 !important;
+}
+
+.items-builder-wrapper.view-cards .col-item-total {
+    grid-column: span 2 !important;
+    display: block !important;
+    padding: 0 !important;
+}
+
+.items-builder-wrapper.view-cards .col-item-action {
+    display: none !important;
+}
+
+/* Card Field Labels */
+.col-label {
+    display: none;
+}
+
+.items-builder-wrapper.view-cards .col-label {
+    display: block !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    color: var(--text-sub) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.4px !important;
+    margin-bottom: 4px !important;
+}
+
+/* Inputs in Card View */
+.items-builder-wrapper.view-cards .form-control {
+    width: 100% !important;
+    height: 38px !important;
+    font-size: 13.5px !important;
+    padding: 0 10px !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+    font-weight: 600 !important;
+}
+
+.items-builder-wrapper.view-cards .vrow-custom-name {
+    height: 32px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+.items-builder-wrapper.view-cards .vrow-total-amt {
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    color: #60a5fa !important;
+    font-family: var(--font-mono), monospace !important;
+    background: rgba(96, 165, 250, 0.1) !important;
+    border: 1px solid rgba(96, 165, 250, 0.25) !important;
+    border-radius: 8px !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+}
+
+/* --------------------------------------------------------------------------
+   MODE 2: TABLE VIEW (Standard Wide Scrollable Desktop / Tablet View)
+   -------------------------------------------------------------------------- */
+.items-builder-wrapper.view-table {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    background: #141720 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0 !important;
+}
+
+.items-builder-wrapper.view-table .item-row-builder-table {
+    display: table !important;
+    width: 100% !important;
+    min-width: 720px !important;
+    border-collapse: collapse !important;
+    font-size: 13px !important;
+}
+
+.items-builder-wrapper.view-table .item-row-builder-table thead {
+    display: table-header-group !important;
+}
+
+.items-builder-wrapper.view-table .item-row-builder-table tbody {
+    display: table-row-group !important;
+}
+
+.items-builder-wrapper.view-table .item-row-builder-table th {
+    background-color: #1a1e27 !important;
+    padding: 8px 10px !important;
+    color: var(--text-sub) !important;
+    text-align: left !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    white-space: nowrap !important;
+}
+
+.items-builder-wrapper.view-table tr.vform-item-row {
+    display: table-row !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+.items-builder-wrapper.view-table td {
+    display: table-cell !important;
+    padding: 6px 6px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    vertical-align: middle !important;
+}
+
+.items-builder-wrapper.view-table .item-card-row-header,
+.items-builder-wrapper.view-table .col-label {
+    display: none !important;
+}
+
+.items-builder-wrapper.view-table .col-item-action {
+    display: table-cell !important;
+    text-align: center !important;
+}
+
+.items-builder-wrapper.view-table .form-control {
+    height: 36px !important;
+    padding: 0 8px !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+
+.items-builder-wrapper.view-table .vrow-custom-name {
+    height: 26px !important;
+    font-size: 11px !important;
+    margin-top: 4px !important;
+}
+
+.items-builder-wrapper.view-table .vrow-total-amt {
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    color: #60a5fa !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+    padding-right: 4px !important;
+    background: none !important;
+    border: none !important;
+}
+
+.btn-del-item-table {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+    color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+    border: 1px solid rgba(239, 68, 68, 0.2) !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    transition: all 0.15s ease !important;
+}
+
+.btn-del-item-table:hover {
+    background: rgba(239, 68, 68, 0.25) !important;
+}
+
+/* --------------------------------------------------------------------------
+   LIGHT THEME OVERRIDES
+   -------------------------------------------------------------------------- */
+[data-theme="light"] .items-builder-wrapper.view-table {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .items-builder-wrapper.view-table .item-row-builder-table th {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    border-bottom-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .items-builder-wrapper.view-table td {
+    border-bottom-color: #f1f5f9 !important;
+}
+
+[data-theme="light"] .items-builder-wrapper.view-cards tr.vform-item-row {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="light"] .items-builder-wrapper.view-cards .item-card-row-header {
+    border-bottom-color: #f1f5f9 !important;
+}
+
+[data-theme="light"] .item-row-badge {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border-color: #bfdbfe !important;
+}
+
+[data-theme="light"] .btn-del-item-card {
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+    border-color: #fecaca !important;
+}
+
+[data-theme="light"] .items-builder-wrapper.view-cards .vrow-total-amt {
+    background: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+    color: #059669 !important;
+}
+
+[data-theme="light"] .items-builder-wrapper.view-table .vrow-total-amt {
+    color: #059669 !important;
 }
 
 /* Badge helpers */
