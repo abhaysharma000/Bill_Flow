@@ -4,8 +4,11 @@
   "description": "BillFlow - Smart GST Invoicing, Inventory & Khata Ledger Management App",
   "main": "sw.js",
   "scripts": {
-    "build": "node build_www.js && npx cap copy android",
+    "build": "node build_all.js",
+    "build:all": "node build_all.js",
     "build:apk": "node build_apk.js",
+    "build:desktop": "node build_desktop.js",
+    "build:web": "node build_www.js && npx cap copy android",
     "cap:sync": "node build_www.js && npx cap sync android",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

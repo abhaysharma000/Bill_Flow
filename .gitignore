@@ -30,3 +30,8 @@ desktop.ini
 !apk/
 !apk/*.apk
 
+# Desktop Windows software (allow desktop folder and exe)
+!desktop/
+!desktop/BillFlow.exe
+
+

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bfGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4338ca"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bfGrad)"/>
+  <!-- Bill / Document Shape -->
+  <path d="M140 100 H330 L380 150 V412 H140 Z" fill="#ffffff" rx="16"/>
+  <!-- Lines on bill -->
+  <rect x="180" y="190" width="160" height="24" rx="12" fill="#e2e8f0"/>
+  <rect x="180" y="240" width="130" height="20" rx="10" fill="#cbd5e1"/>
+  <rect x="180" y="280" width="150" height="20" rx="10" fill="#cbd5e1"/>
+  <!-- Rupee Symbol or Checkmark -->
+  <circle cx="340" cy="350" r="50" fill="#10b981"/>
+  <path d="M320 350 L335 365 L365 335" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
